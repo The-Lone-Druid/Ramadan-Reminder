@@ -1,0 +1,7 @@
+{
+  "name": "ramadan-reminder",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}
