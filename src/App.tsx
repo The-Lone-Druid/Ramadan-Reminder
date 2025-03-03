@@ -13,21 +13,19 @@ import { Redirect, Route } from "react-router-dom";
 import {
   settingsOutline,
   homeOutline,
-  timeOutline,
   calendarClearOutline,
+  timeOutline,
 } from "ionicons/icons";
-import { StatusBar, Style } from "@capacitor/status-bar";
-import { App as CapacitorApp } from "@capacitor/app";
-import { useEffect } from "react";
 import Home from "./pages/Home";
 import Settings from "./pages/Settings";
-import PrayerTimes from "./pages/PrayerTimes";
 import Calendar from "./pages/Calendar";
+import { App as CapApp } from "@capacitor/app";
+import { Browser } from "@capacitor/browser";
+import { StatusBar, Style } from "@capacitor/status-bar";
+import { useEffect } from "react";
 
 /* Core CSS required for Ionic components to work properly */
 import "@ionic/react/css/core.css";
-
-/* Basic CSS for apps built with Ionic */
 import "@ionic/react/css/normalize.css";
 import "@ionic/react/css/structure.css";
 import "@ionic/react/css/typography.css";
@@ -54,33 +52,87 @@ import "@ionic/react/css/palettes/dark.system.css";
 /* Theme variables */
 import "./theme/variables.css";
 import "./theme/tabs.css";
+import PrayerTimes from "./pages/PrayerTimes";
 
-setupIonicReact({
-  mode: "md",
-});
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.ramadanreminder.app";
+const MARKET_URL = "market://details?id=com.ramadanreminder.app";
+const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+setupIonicReact();
 
 const App: React.FC = () => {
   useEffect(() => {
-    const setupStatusBar = async () => {
-      try {
-        const info = await CapacitorApp.getInfo();
-        // Check if not running on web
-        if (info.name !== "web") {
-          // Show status bar and set style
-          await StatusBar.show();
-          await StatusBar.setStyle({ style: Style.Dark });
-
-          // Set status bar background color and overlay
-          await StatusBar.setBackgroundColor({ color: "#1f1f1f" });
-          await StatusBar.setOverlaysWebView({ overlay: false });
-        }
-      } catch (error) {
-        console.error("Error setting up status bar:", error);
-      }
-    };
-
     setupStatusBar();
+    checkForUpdate();
+
+    // Set up periodic update checks
+    const updateInterval = setInterval(checkForUpdate, UPDATE_CHECK_INTERVAL);
+    return () => clearInterval(updateInterval);
   }, []);
+
+  const setupStatusBar = async () => {
+    try {
+      const info = await CapApp.getInfo();
+      // Check if not running on web
+      if (info.name !== "web") {
+        // Show status bar and set style
+        await StatusBar.show();
+        await StatusBar.setStyle({ style: Style.Dark });
+
+        // Set status bar background color and overlay
+        await StatusBar.setBackgroundColor({ color: "#1f1f1f" });
+        await StatusBar.setOverlaysWebView({ overlay: false });
+      }
+    } catch (error) {
+      console.error("Error setting up status bar:", error);
+    }
+  };
+
+  const checkForUpdate = async () => {
+    try {
+      const lastUpdateCheck = localStorage.getItem('lastUpdateCheck');
+      const now = Date.now();
+
+      // Only check once per day
+      if (lastUpdateCheck && now - parseInt(lastUpdateCheck) < UPDATE_CHECK_INTERVAL) {
+        return;
+      }
+
+      // Store the check time
+      localStorage.setItem('lastUpdateCheck', now.toString());
+
+      // Add listener for app url open (handles Play Store return)
+      CapApp.addListener("appUrlOpen", (data) => {
+        console.log("App opened with URL:", data);
+      });
+
+      // Check if Play Store is available
+      try {
+        await Browser.open({ url: MARKET_URL });
+        await Browser.close();
+      } catch (error) {
+        console.log('Play Store check failed:', error);
+        return; // Don't show update prompt if Play Store isn't accessible
+      }
+
+      // If we get here, show update prompt
+      const confirmed = window.confirm(
+        "A new version of Ramadan Reminder might be available. Would you like to check for updates?"
+      );
+
+      if (confirmed) {
+        try {
+          // Try opening in Play Store app first
+          await Browser.open({ url: MARKET_URL });
+        } catch {
+          // Fallback to web URL if Play Store app isn't available
+          await Browser.open({ url: PLAY_STORE_URL });
+        }
+      }
+    } catch (error) {
+      console.error("Error in update check:", error);
+    }
+  };
 
   return (
     <IonApp>
