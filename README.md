@@ -25,7 +25,7 @@ A mobile application built with Ionic and Capacitor to help users track Ramadan 
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/yourusername/ramadan-reminder.git
+    git clone https://github.com/The-Lone-Druid/ramadan-reminder.git
     cd ramadan-reminder
     ```
 
@@ -289,7 +289,7 @@ pnpm run e2e
 
 - Create an issue in the GitHub repository
 - Email support: <support@example.com>
-- Twitter: [@yourusername](https://twitter.com/yourusername)
+- Twitter: [@The-Lone-Druid](https://twitter.com/The-Lone-Druid)
 
 ### Reporting Bugs
 
@@ -305,4 +305,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Made with ❤️ by [Your Name](https://github.com/yourusername)
+Made with ❤️ by [Zahid Shaikh](https://github.com/The-Lone-Druid)

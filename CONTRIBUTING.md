@@ -57,7 +57,7 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 2. Install dependencies
 
     ```bash
-    npm install
+    pnpm install
     ```
 
 3. Create a branch
@@ -194,7 +194,7 @@ git commit -m "feat: add voice reminder scheduling"
 1. Update version numbers
 
     ```bash
-    npm run release:patch|minor|major
+    pnpm run release:patch|minor|major
     ```
 
 2. Update CHANGELOG.md
