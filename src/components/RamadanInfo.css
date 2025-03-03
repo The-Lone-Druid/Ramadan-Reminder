@@ -1,0 +1,114 @@
+.ramadan-info-card {
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  color: var(--ion-color-primary-contrast);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ramadan-icon {
+  margin-right: 8px;
+  font-size: 1.5em;
+  vertical-align: middle;
+}
+
+.status-section {
+  text-align: center;
+  padding: 16px 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.status-title {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: var(--ion-color-primary-contrast);
+}
+
+.status-subtitle {
+  font-size: 1.1em;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.info-grid {
+  padding: 0;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  margin: 8px;
+  transition: transform 0.2s ease;
+}
+
+.info-item:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.info-icon {
+  font-size: 1.8em;
+  margin-right: 12px;
+  color: var(--ion-color-warning);
+}
+
+.info-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-label {
+  font-size: 0.9em;
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+
+.info-value {
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+/* Optimize for mobile */
+@media (max-width: 768px) {
+  .status-title {
+    font-size: 1.3em;
+  }
+
+  .status-subtitle {
+    font-size: 1em;
+  }
+
+  .info-item {
+    padding: 8px;
+    margin: 4px;
+  }
+
+  .info-icon {
+    font-size: 1.5em;
+  }
+
+  .info-value {
+    font-size: 1.1em;
+  }
+}
+
+/* Add animation for the card */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ramadan-info-card {
+  animation: fadeInUp 0.5s ease-out;
+} 

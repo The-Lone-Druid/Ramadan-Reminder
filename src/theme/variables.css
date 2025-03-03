@@ -1,2 +1,114 @@
 /* For information on how to create your own theme, please see:
 http://ionicframework.com/docs/theming/ */
+
+:root {
+  /* Primary Colors */
+  --ion-color-primary: #2E7D32;
+  --ion-color-primary-rgb: 46, 125, 50;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #286e2c;
+  --ion-color-primary-tint: #438746;
+
+  /* Secondary Colors */
+  --ion-color-secondary: #81C784;
+  --ion-color-secondary-rgb: 129, 199, 132;
+  --ion-color-secondary-contrast: #000000;
+  --ion-color-secondary-contrast-rgb: 0, 0, 0;
+  --ion-color-secondary-shade: #71af74;
+  --ion-color-secondary-tint: #8ecd90;
+
+  /* Warning Colors */
+  --ion-color-warning: #FF9800;
+  --ion-color-warning-rgb: 255, 152, 0;
+  --ion-color-warning-contrast: #000000;
+  --ion-color-warning-contrast-rgb: 0, 0, 0;
+  --ion-color-warning-shade: #e08600;
+  --ion-color-warning-tint: #ffa21a;
+
+  /* Medium (Text & Icons) */
+  --ion-color-medium: #666666;
+  --ion-color-medium-rgb: 102, 102, 102;
+  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium-contrast-rgb: 255, 255, 255;
+  --ion-color-medium-shade: #5a5a5a;
+  --ion-color-medium-tint: #757575;
+
+  /* Light (Backgrounds & Borders) */
+  --ion-color-light: #f4f5f8;
+  --ion-color-light-rgb: 244, 245, 248;
+  --ion-color-light-contrast: #000000;
+  --ion-color-light-contrast-rgb: 0, 0, 0;
+  --ion-color-light-shade: #d7d8da;
+  --ion-color-light-tint: #f5f6f9;
+
+  /* Spacing */
+  --ion-padding: 16px;
+  --ion-margin: 16px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Border Radius */
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 16px;
+  --card-border-radius: var(--border-radius-md);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
+  --card-box-shadow: var(--shadow-md);
+
+  /* Custom Variables */
+  --app-max-width: 768px;
+  --app-background: #f8f9fa;
+  --header-height: 56px;
+  --tab-bar-height: 56px;
+
+  /* Typography */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+
+  /* Item Background */
+  --ion-item-background: transparent;
+}
+
+/* Dark Mode Overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ion-color-primary: #4CAF50;
+    --ion-color-primary-rgb: 76, 175, 80;
+    --ion-color-primary-contrast: #000000;
+    --ion-color-primary-contrast-rgb: 0, 0, 0;
+    --ion-color-primary-shade: #439a46;
+    --ion-color-primary-tint: #5eb762;
+
+    --ion-color-secondary: #A5D6A7;
+    --ion-color-secondary-rgb: 165, 214, 167;
+
+    --app-background: #121212;
+    --card-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    
+    --ion-background-color: #1e1e1e;
+    --ion-background-color-rgb: 30, 30, 30;
+    
+    --ion-text-color: #ffffff;
+    --ion-text-color-rgb: 255, 255, 255;
+    
+    --ion-border-color: #2d2d2d;
+    
+    --ion-color-medium: #989aa2;
+    --ion-color-medium-rgb: 152, 154, 162;
+    
+    --ion-color-light: #222428;
+    --ion-color-light-rgb: 34, 36, 40;
+  }
+}

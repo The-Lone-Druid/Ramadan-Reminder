@@ -1,0 +1,162 @@
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton-card {
+  margin: 1rem;
+  background: var(--ion-color-light);
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.skeleton-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+}
+
+.skeleton-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, var(--ion-color-medium) 25%, var(--ion-color-light) 50%, var(--ion-color-medium) 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+.skeleton-title {
+  width: 180px;
+  height: 24px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--ion-color-medium) 25%, var(--ion-color-light) 50%, var(--ion-color-medium) 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+.skeleton-text {
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--ion-color-medium) 25%, var(--ion-color-light) 50%, var(--ion-color-medium) 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+  margin: 8px 0;
+}
+
+.skeleton-status {
+  padding: 16px;
+  background: var(--ion-color-light-shade);
+}
+
+.skeleton-status .skeleton-text:first-child {
+  width: 80%;
+  margin-bottom: 12px;
+}
+
+.skeleton-status .skeleton-text:last-child {
+  width: 60%;
+}
+
+.skeleton-info-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--ion-color-light-shade);
+  border-radius: 8px;
+  margin: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.skeleton-info-content {
+  flex: 1;
+}
+
+.skeleton-info-content .skeleton-text:first-child {
+  width: 70%;
+  margin-bottom: 8px;
+}
+
+.skeleton-info-content .skeleton-text:last-child {
+  width: 50%;
+}
+
+.skeleton-prayer-times {
+  padding: 16px;
+}
+
+.skeleton-prayer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--ion-color-light-shade);
+  border-radius: 8px;
+}
+
+.skeleton-prayer-item .skeleton-text {
+  flex: 1;
+}
+
+.skeleton-calendar-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 16px;
+  background: var(--ion-color-medium);
+  border-radius: 8px 8px 0 0;
+}
+
+.skeleton-calendar-header .skeleton-text {
+  height: 20px;
+  margin: 0;
+}
+
+.skeleton-calendar-rows {
+  padding: 8px;
+}
+
+.skeleton-calendar-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 16px;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+}
+
+.skeleton-calendar-row:last-child {
+  border-bottom: none;
+}
+
+.skeleton-calendar-row .skeleton-text {
+  margin: 0;
+}
+
+/* Optimize for mobile */
+@media (max-width: 768px) {
+  .skeleton-card {
+    margin: 0.5rem;
+  }
+
+  .skeleton-header {
+    padding: 12px;
+  }
+
+  .skeleton-info-item {
+    padding: 12px;
+    margin: 4px;
+  }
+
+  .skeleton-calendar-header,
+  .skeleton-calendar-row {
+    padding: 12px;
+  }
+} 
