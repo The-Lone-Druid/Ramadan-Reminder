@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.1](https://github.com/The-Lone-Druid/Ramadan-Reminder/compare/v0.1.0...v0.1.1) (2025-03-03)
+
+
+### Features
+
+* added missing variables file ([cada3f7](https://github.com/The-Lone-Druid/Ramadan-Reminder/commit/cada3f7c97598ccaee3f7c241dc16b5aa51f1f21))
+
+
+### Bug Fixes
+
+* capacitor config fix ([c3b047c](https://github.com/The-Lone-Druid/Ramadan-Reminder/commit/c3b047caa45c8481255169913e51c3cb8e3ca3cf))
+
 ## [0.1.0](https://github.com/The-Lone-Druid/Ramadan-Reminder/compare/v0.0.3...v0.1.0) (2025-03-03)
 
 
