@@ -1,11 +1,20 @@
 import { Coordinates } from "adhan";
 import { TTSSettings } from '../types/ramadan';
+import { locationEvents } from './events';
+import { Geolocation } from '@capacitor/geolocation';
+
+export interface DateAdjustmentConfig {
+  enabled: boolean;
+  daysToAdd: number;
+  reason: string;
+}
 
 const STORAGE_KEYS = {
   COORDINATES: "ramadan-coordinates",
   NOTIFICATIONS: "ramadan-notifications",
   MANUAL_TIMES: "ramadan-manual-times",
   TTS_SETTINGS: 'tts_settings',
+  DATE_ADJUSTMENT: 'date-adjustment',
 };
 
 interface NotificationSettings {
@@ -19,11 +28,6 @@ export interface ManualTimeEntry {
   iftar: string; // HH:mm format
 }
 
-const defaultCoordinates: Coordinates = {
-  latitude: 23.8103, // Default to Dhaka, Bangladesh
-  longitude: 90.4125,
-};
-
 const DEFAULT_TTS_SETTINGS: TTSSettings = {
   enabled: true,
   volume: 1.0,
@@ -32,24 +36,71 @@ const DEFAULT_TTS_SETTINGS: TTSSettings = {
   pitch: 1.0,
 };
 
+// Function to determine if location is in India (approximate bounding box)
+export const isLocationInIndia = (coordinates: Coordinates | null): boolean => {
+  if (!coordinates) return false;
+  const { latitude, longitude } = coordinates;
+  return latitude >= 8.4 && latitude <= 37.6 && longitude >= 68.7 && longitude <= 97.25;
+};
+
+export const getDateAdjustment = (): DateAdjustmentConfig => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.DATE_ADJUSTMENT);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    
+    // Auto-configure based on location
+    const coordinates = getCoordinates();
+    if (isLocationInIndia(coordinates)) {
+      return {
+        enabled: true,
+        daysToAdd: 1,
+        reason: 'Adjusted for Indian moon sighting practice',
+      };
+    }
+    
+    return {
+      enabled: false,
+      daysToAdd: 0,
+      reason: '',
+    };
+  } catch (error) {
+    console.error("Error getting date adjustment:", error);
+    return {
+      enabled: false,
+      daysToAdd: 0,
+      reason: '',
+    };
+  }
+};
+
+export const saveDateAdjustment = (config: DateAdjustmentConfig): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.DATE_ADJUSTMENT, JSON.stringify(config));
+  } catch (error) {
+    console.error("Error saving date adjustment:", error);
+  }
+};
+
 export const saveCoordinates = (coordinates: Coordinates): void => {
   try {
     localStorage.setItem(STORAGE_KEYS.COORDINATES, JSON.stringify(coordinates));
+    // Emit location change event
+    locationEvents.emit(coordinates);
   } catch (error) {
     console.error("Error saving coordinates:", error);
   }
 };
 
-export const getCoordinates = (): Coordinates => {
+export const getCoordinates = (): Coordinates | null => {
+  const stored = localStorage.getItem(STORAGE_KEYS.COORDINATES);
+  if (!stored) return null;
+  
   try {
-    const stored = localStorage.getItem(STORAGE_KEYS.COORDINATES);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-    return defaultCoordinates;
-  } catch (error) {
-    console.error("Error getting coordinates:", error);
-    return defaultCoordinates;
+    return JSON.parse(stored) as Coordinates;
+  } catch {
+    return null;
   }
 };
 
@@ -129,5 +180,31 @@ export const saveTTSSettings = (settings: TTSSettings): void => {
     localStorage.setItem(STORAGE_KEYS.TTS_SETTINGS, JSON.stringify(settings));
   } catch (error) {
     console.error('Error saving TTS settings:', error);
+  }
+};
+
+export const setCoordinates = (coordinates: Coordinates) => {
+  localStorage.setItem(STORAGE_KEYS.COORDINATES, JSON.stringify(coordinates));
+};
+
+export const getCurrentLocation = async (): Promise<Coordinates> => {
+  try {
+    const position = await Geolocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    });
+
+    const coordinates: Coordinates = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+    };
+    
+    setCoordinates(coordinates);
+    return coordinates;
+  } catch (error: unknown) {
+    console.error('Geolocation error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    throw new Error(`Failed to get location: ${errorMessage}`);
   }
 };

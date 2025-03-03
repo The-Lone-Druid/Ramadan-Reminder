@@ -109,3 +109,24 @@
 .ramadan-info-card {
   animation: fadeInUp 0.5s ease-out;
 }
+
+.date-adjustment-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background-color: var(--ion-color-warning-tint);
+  border-radius: 8px;
+  font-size: 0.9em;
+}
+
+.date-adjustment-notice ion-icon {
+  color: var(--ion-color-warning);
+  font-size: 1.2em;
+}
+
+.date-adjustment-notice p {
+  margin: 0;
+  color: var(--ion-color-dark);
+}

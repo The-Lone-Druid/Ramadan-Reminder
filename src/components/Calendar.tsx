@@ -1,8 +1,16 @@
 import { IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonGrid, IonRow, IonCol, IonIcon } from "@ionic/react";
-import { format, isToday, isSameDay } from "date-fns";
-import { RamadanData } from "../types/ramadan";
+import { format, isSameDay } from "date-fns";
 import { calendarOutline, star } from "ionicons/icons";
+import { getCurrentRamadanDates } from "../utils/dates";
 import "./Calendar.css";
+
+interface RamadanData {
+  prayerTimes: {
+    date: Date;
+    sehri: Date;
+    iftar: Date;
+  }[];
+}
 
 interface CalendarProps {
   data: RamadanData | null;
@@ -12,13 +20,14 @@ const Calendar: React.FC<CalendarProps> = ({ data }) => {
   if (!data) return null;
 
   const today = new Date();
+  const ramadanDates = getCurrentRamadanDates();
 
   return (
     <IonCard>
       <IonCardHeader>
         <IonCardTitle>
           <IonIcon icon={calendarOutline} className="calendar-icon" />
-          Ramadan Calendar 2025
+          Ramadan Calendar {ramadanDates.YEAR}
         </IonCardTitle>
       </IonCardHeader>
       <IonCardContent>

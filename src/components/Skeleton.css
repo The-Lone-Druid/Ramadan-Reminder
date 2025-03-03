@@ -10,8 +10,8 @@
 .skeleton-card {
   margin: 1rem 0;
   background: var(--ion-card-background);
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -21,7 +21,6 @@
   gap: 12px;
   padding: 16px;
   border-bottom: 1px solid var(--ion-color-light-shade);
-  background: var(--ion-color-light);
 }
 
 .skeleton-icon {
@@ -35,6 +34,11 @@
   );
   background-size: 1000px 100%;
   animation: shimmer 2s infinite linear;
+}
+
+.skeleton-icon.small {
+  width: 20px;
+  height: 20px;
 }
 
 .skeleton-title {
@@ -63,18 +67,75 @@
   margin: 8px 0;
 }
 
+.skeleton-text.time {
+  width: 80px;
+}
+
+.skeleton-text.day-number {
+  width: 30px;
+}
+
+.skeleton-text.skeleton-number {
+  height: 24px;
+  font-size: 20px;
+  margin-top: 4px;
+}
+
+.skeleton-analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.skeleton-analytics-item {
+  text-align: center;
+  padding: 12px;
+  background: var(--ion-color-light-shade);
+  border-radius: 8px;
+}
+
+.skeleton-progress-bar {
+  height: 8px;
+  background: var(--ion-color-light-shade);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.skeleton-progress-track {
+  height: 100%;
+  width: 75%;
+  background: linear-gradient(90deg, 
+    var(--ion-color-primary) 25%, 
+    var(--ion-color-primary-shade) 50%, 
+    var(--ion-color-primary) 75%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+  border-radius: 4px;
+}
+
 .skeleton-status {
   padding: 16px;
   background: var(--ion-color-light-shade);
+  border-radius: 8px;
+  margin-bottom: 16px;
 }
 
-.skeleton-status .skeleton-text:first-child {
-  width: 80%;
-  margin-bottom: 12px;
+.skeleton-date-adjustment {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--ion-color-warning-tint);
+  border-radius: 8px;
+  margin-bottom: 16px;
 }
 
-.skeleton-status .skeleton-text:last-child {
-  width: 60%;
+.skeleton-date-adjustment .skeleton-text {
+  flex: 1;
+  margin: 0;
 }
 
 .skeleton-info-item {
@@ -102,14 +163,14 @@
 }
 
 .skeleton-prayer-times {
-  padding: 16px;
+  padding: 8px;
 }
 
 .skeleton-prayer-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   padding: 12px;
   background: var(--ion-color-light-shade);
   border-radius: 8px;
@@ -117,44 +178,54 @@
 
 .skeleton-prayer-item .skeleton-text {
   flex: 1;
-}
-
-.skeleton-calendar-header {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-  padding: 12px;
-  background: var(--ion-color-medium);
-  border-radius: 8px 8px 0 0;
-}
-
-.skeleton-calendar-header .skeleton-text {
-  height: 20px;
   margin: 0;
 }
 
-.skeleton-calendar-rows {
+.skeleton-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
   padding: 8px;
 }
 
-.skeleton-calendar-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-  padding: 12px;
-  border-bottom: 1px solid var(--ion-color-light-shade);
+.skeleton-calendar-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  background: var(--ion-color-light-shade);
+  border-radius: 8px;
+  gap: 4px;
 }
 
-.skeleton-calendar-row:last-child {
-  border-bottom: none;
+.skeleton-calendar-day .skeleton-text {
+  margin: 4px 0;
 }
 
-.skeleton-calendar-row .skeleton-text {
-  margin: 0;
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .skeleton-card {
+    background: var(--ion-background-color);
+  }
+
+  .skeleton-info-item,
+  .skeleton-prayer-item,
+  .skeleton-calendar-day,
+  .skeleton-analytics-item {
+    background: rgba(var(--ion-color-light-rgb), 0.1);
+  }
+
+  .skeleton-progress-bar {
+    background: rgba(var(--ion-color-light-rgb), 0.1);
+  }
+
+  .skeleton-date-adjustment {
+    background: rgba(var(--ion-color-warning-rgb), 0.2);
+  }
 }
 
 /* Optimize for mobile */
-@media (max-width: 768px) {
+@media (max-width: 576px) {
   .skeleton-header {
     padding: 12px;
   }
@@ -164,8 +235,11 @@
     margin: 4px;
   }
 
-  .skeleton-calendar-header,
-  .skeleton-calendar-row {
-    padding: 8px;
+  .skeleton-analytics-grid {
+    gap: 8px;
+  }
+
+  .skeleton-calendar-grid {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
   }
 } 

@@ -1,4 +1,3 @@
-import { Redirect, Route } from "react-router-dom";
 import {
   IonApp,
   IonIcon,
@@ -10,15 +9,20 @@ import {
   setupIonicReact,
 } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
+import { Redirect, Route } from "react-router-dom";
 import {
-  todayOutline,
-  calendarClearOutline,
   settingsOutline,
+  homeOutline,
+  timeOutline,
+  calendarClearOutline,
 } from "ionicons/icons";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { App as CapacitorApp } from "@capacitor/app";
 import { useEffect } from "react";
+import Home from "./pages/Home";
 import Settings from "./pages/Settings";
+import PrayerTimes from "./pages/PrayerTimes";
+import Calendar from "./pages/Calendar";
 
 /* Core CSS required for Ionic components to work properly */
 import "@ionic/react/css/core.css";
@@ -50,8 +54,6 @@ import "@ionic/react/css/palettes/dark.system.css";
 /* Theme variables */
 import "./theme/variables.css";
 import "./theme/tabs.css";
-import Home from "./pages/Home";
-import Calendar from "./pages/Calendar";
 
 setupIonicReact({
   mode: "md",
@@ -91,6 +93,9 @@ const App: React.FC = () => {
             <Route exact path="/calendar">
               <Calendar />
             </Route>
+            <Route exact path="/prayer-times">
+              <PrayerTimes />
+            </Route>
             <Route path="/settings">
               <Settings />
             </Route>
@@ -100,15 +105,19 @@ const App: React.FC = () => {
           </IonRouterOutlet>
           <IonTabBar slot="bottom">
             <IonTabButton tab="home" href="/home">
-              <IonIcon aria-hidden="true" icon={todayOutline} />
-              <IonLabel>Today</IonLabel>
+              <IonIcon icon={homeOutline} />
+              <IonLabel>Home</IonLabel>
             </IonTabButton>
             <IonTabButton tab="calendar" href="/calendar">
-              <IonIcon aria-hidden="true" icon={calendarClearOutline} />
+              <IonIcon icon={calendarClearOutline} />
               <IonLabel>Calendar</IonLabel>
             </IonTabButton>
+            <IonTabButton tab="prayer-times" href="/prayer-times">
+              <IonIcon icon={timeOutline} />
+              <IonLabel>Prayer Times</IonLabel>
+            </IonTabButton>
             <IonTabButton tab="settings" href="/settings">
-              <IonIcon aria-hidden="true" icon={settingsOutline} />
+              <IonIcon icon={settingsOutline} />
               <IonLabel>Settings</IonLabel>
             </IonTabButton>
           </IonTabBar>

@@ -6,16 +6,30 @@ export interface PrayerTime {
 
 export interface TTSSettings {
   enabled: boolean;
+  language: string;
   volume: number;
-  language: 'en-IN' | 'en-US';
   rate: number;
   pitch: number;
 }
 
+export type RamadanDay = {
+  date: Date;
+  dayNumber: number;
+  isToday: boolean;
+  sehri: Date;
+  iftar: Date;
+  // Prayer times
+  fajr: Date;
+  sunrise: Date;
+  dhuhr: Date;
+  asr: Date;
+  sunset: Date;
+  maghrib: Date;
+  isha: Date;
+};
+
 export interface RamadanData {
-  prayerTimes: PrayerTime[];
-  startDate: Date;
-  endDate: Date;
+  prayerTimes: RamadanDay[];
   currentDay: number;
   totalDays: number;
 } 

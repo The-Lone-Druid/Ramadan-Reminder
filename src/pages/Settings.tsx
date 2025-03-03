@@ -17,11 +17,14 @@ import {
   IonSelectOption,
   IonCard,
   IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
 } from "@ionic/react";
 import {
   locationOutline,
   notificationsOutline,
   playCircleOutline,
+  informationCircleOutline,
 } from "ionicons/icons";
 import { useEffect, useState } from "react";
 import { Coordinates } from "adhan";
@@ -32,11 +35,15 @@ import {
   getNotificationSettings,
   getTTSSettings,
   saveTTSSettings,
+  getDateAdjustment,
+  saveDateAdjustment,
 } from "../utils/storage";
 import {
-  scheduleNotifications,
-  checkNotificationPermissions,
+  setupNotifications,
+  scheduleRamadanNotifications,
+  NotificationSchedule,
 } from "../utils/notifications";
+import { LocalNotifications } from "@capacitor/local-notifications";
 import { calculatePrayerTimes } from "../utils/prayerTimes";
 import { TTSSettings } from "../types/ramadan";
 import { reminderService } from "../utils/reminderService";
@@ -52,18 +59,61 @@ const Settings: React.FC = () => {
   const [sehriNotification, setSehriNotification] = useState(true);
   const [iftarNotification, setIftarNotification] = useState(true);
   const [ttsSettings, setTTSSettings] = useState<TTSSettings>(getTTSSettings());
+  const [dateAdjustment, setDateAdjustment] = useState(getDateAdjustment());
   const [presentToast] = useIonToast();
 
   useEffect(() => {
-    // Load saved settings
-    const coordinates = getCoordinates();
-    setLatitude(coordinates.latitude.toString());
-    setLongitude(coordinates.longitude.toString());
+    const initializeSettings = async () => {
+      try {
+        // Load saved settings
+        const coordinates = getCoordinates();
+        if (coordinates) {
+          setLatitude(coordinates.latitude.toString());
+          setLongitude(coordinates.longitude.toString());
+        } else {
+          setLatitude("");
+          setLongitude("");
+        }
 
-    const notificationSettings = getNotificationSettings();
-    setSehriNotification(notificationSettings.sehri);
-    setIftarNotification(notificationSettings.iftar);
-  }, []);
+        const notificationSettings = getNotificationSettings();
+        setSehriNotification(notificationSettings.sehri);
+        setIftarNotification(notificationSettings.iftar);
+
+        // Request permissions immediately
+        const permResult = await LocalNotifications.checkPermissions();
+        if (permResult.display !== "granted") {
+          const requestResult = await LocalNotifications.requestPermissions();
+          if (requestResult.display === "granted") {
+            // Setup notifications if permission was just granted
+            await setupNotifications();
+            if (notificationSettings.sehri || notificationSettings.iftar) {
+              // Only schedule notifications if we have valid coordinates
+              if (coordinates) {
+                // Calculate prayer times and schedule notifications
+                const times = calculatePrayerTimes(new Date(), coordinates);
+                const schedule: NotificationSchedule = {
+                  sehriTime: times.sehri,
+                  iftarTime: times.iftar,
+                  dayNumber: 1,
+                };
+                await scheduleRamadanNotifications([schedule]);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error initializing settings:", error);
+        presentToast({
+          message: "Error initializing settings. Please try again.",
+          duration: 3000,
+          position: "bottom",
+          color: "danger",
+        });
+      }
+    };
+
+    initializeSettings();
+  }, [presentToast]);
 
   const getCurrentLocation = async () => {
     try {
@@ -97,10 +147,7 @@ const Settings: React.FC = () => {
         latitude: location.latitude,
         longitude: location.longitude,
       });
-      updateNotifications({
-        latitude: location.latitude,
-        longitude: location.longitude,
-      });
+      updateNotifications(location.latitude, location.longitude);
       presentToast({
         message: "Location updated successfully!",
         duration: 2000,
@@ -119,6 +166,16 @@ const Settings: React.FC = () => {
   };
 
   const handleCoordinateChange = () => {
+    if (!latitude || !longitude) {
+      presentToast({
+        message: "Please enter both latitude and longitude",
+        duration: 3000,
+        position: "bottom",
+        color: "danger",
+      });
+      return;
+    }
+
     const lat = parseFloat(latitude);
     const lng = parseFloat(longitude);
 
@@ -134,36 +191,97 @@ const Settings: React.FC = () => {
 
     const coordinates: Coordinates = { latitude: lat, longitude: lng };
     saveCoordinates(coordinates);
-    updateNotifications(coordinates);
+    updateNotifications(lat, lng);
     presentToast({
       message: "Settings saved successfully!",
       duration: 2000,
       position: "bottom",
+      color: "success",
     });
   };
 
-  const updateNotifications = async (coordinates: Coordinates) => {
+  const updateNotifications = async (latitude: number, longitude: number) => {
     if (sehriNotification || iftarNotification) {
-      const hasPermission = await checkNotificationPermissions();
-      if (!hasPermission) {
+      // First check permissions
+      const permResult = await LocalNotifications.checkPermissions();
+
+      // If not granted, request permissions
+      if (permResult.display !== "granted") {
+        const requestResult = await LocalNotifications.requestPermissions();
+        if (requestResult.display !== "granted") {
+          presentToast({
+            message:
+              "Notifications permission is required. Please enable it in your device settings.",
+            duration: 3000,
+            position: "bottom",
+            color: "warning",
+          });
+          return;
+        }
+      }
+
+      // Setup notifications first
+      const setupSuccess = await setupNotifications();
+      if (!setupSuccess) {
         presentToast({
-          message: "Please enable notifications in your device settings",
+          message: "Failed to setup notifications",
           duration: 3000,
           position: "bottom",
-          color: "warning",
+          color: "danger",
         });
         return;
       }
 
-      const times = calculatePrayerTimes(new Date(), coordinates);
-      await scheduleNotifications(times);
+      // Calculate prayer times and schedule notifications
+      const times = calculatePrayerTimes(new Date(), { latitude, longitude });
+      const schedule: NotificationSchedule = {
+        sehriTime: times.sehri,
+        iftarTime: times.iftar,
+        dayNumber: 1, // For testing purposes
+      };
+
+      const scheduleSuccess = await scheduleRamadanNotifications([schedule]);
+      if (!scheduleSuccess) {
+        presentToast({
+          message: "Failed to schedule notifications",
+          duration: 3000,
+          position: "bottom",
+          color: "danger",
+        });
+        return;
+      }
+
+      presentToast({
+        message: "Notifications scheduled successfully",
+        duration: 2000,
+        position: "bottom",
+        color: "success",
+      });
     }
   };
 
-  const handleNotificationChange = (
+  const handleNotificationChange = async (
     type: "sehri" | "iftar",
     checked: boolean
   ) => {
+    // If enabling notifications, check and request permissions first
+    if (checked) {
+      const permResult = await LocalNotifications.checkPermissions();
+      if (permResult.display !== "granted") {
+        const requestResult = await LocalNotifications.requestPermissions();
+        if (requestResult.display !== "granted") {
+          presentToast({
+            message:
+              "Notifications permission is required. Please enable it in your device settings.",
+            duration: 3000,
+            position: "bottom",
+            color: "warning",
+          });
+          return;
+        }
+      }
+    }
+
     if (type === "sehri") {
       setSehriNotification(checked);
     } else {
@@ -175,13 +293,19 @@ const Settings: React.FC = () => {
       iftar: type === "iftar" ? checked : iftarNotification,
     });
 
-    updateNotifications(getCoordinates());
+    if (checked) {
+      updateNotifications(parseFloat(latitude), parseFloat(longitude));
+    }
   };
 
-  const handleTTSChange = (key: keyof TTSSettings, value: any) => {
+  const handleTTSChange = (
+    key: keyof TTSSettings,
+    value: number | string | boolean | { lower: number; upper: number }
+  ) => {
     const newSettings = {
       ...ttsSettings,
-      [key]: value,
+      [key]:
+        typeof value === "object" && "lower" in value ? value.lower : value,
     };
     setTTSSettings(newSettings);
     saveTTSSettings(newSettings);
@@ -192,13 +316,61 @@ const Settings: React.FC = () => {
   };
 
   const testNotifications = async () => {
-    const times = calculatePrayerTimes(new Date(), getCoordinates());
-    await scheduleNotifications(times);
+    // First check and request permissions if needed
+    const permResult = await LocalNotifications.checkPermissions();
+    if (permResult.display !== "granted") {
+      const requestResult = await LocalNotifications.requestPermissions();
+      if (requestResult.display !== "granted") {
+        presentToast({
+          message: "Notifications permission is required for testing.",
+          duration: 3000,
+          position: "bottom",
+          color: "warning",
+        });
+        return;
+      }
+    }
+
+    // Create a test schedule for immediate notification
+    const testSchedule: NotificationSchedule = {
+      sehriTime: new Date(Date.now() + 10000), // 10 seconds from now
+      iftarTime: new Date(Date.now() + 20000), // 20 seconds from now
+      dayNumber: 1,
+    };
+
+    const setupSuccess = await setupNotifications();
+    if (!setupSuccess) {
+      presentToast({
+        message: "Failed to setup notifications",
+        duration: 3000,
+        position: "bottom",
+        color: "danger",
+      });
+      return;
+    }
+
+    await scheduleRamadanNotifications([testSchedule]);
+
     presentToast({
-      message: "Test notifications scheduled!",
+      message: "Test notifications scheduled! Check in 10-20 seconds.",
       duration: 2000,
       position: "bottom",
+      color: "success",
     });
+  };
+
+  const handleDateAdjustmentChange = (checked: boolean) => {
+    const newConfig = {
+      enabled: checked,
+      daysToAdd: checked ? 1 : 0,
+      reason: checked ? 'Adjusted for Indian moon sighting practice' : '',
+    };
+    
+    setDateAdjustment(newConfig);
+    saveDateAdjustment(newConfig);
+    
+    // Refresh data after changing date adjustment
+    window.location.reload();
   };
 
   return (
@@ -318,6 +490,27 @@ const Settings: React.FC = () => {
               onIonChange={(e) => handleTTSChange("pitch", e.detail.value)}
             />
           </IonItem>
+
+          <IonCard>
+            <IonCardHeader>
+              <IonCardTitle>Date Adjustment</IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent>
+              <IonItem>
+                <IonLabel>Adjust dates for Indian moon sighting</IonLabel>
+                <IonToggle
+                  checked={dateAdjustment.enabled}
+                  onIonChange={e => handleDateAdjustmentChange(e.detail.checked)}
+                />
+              </IonItem>
+              {dateAdjustment.enabled && (
+                <p className="ion-padding-start ion-padding-top">
+                  <IonIcon icon={informationCircleOutline} /> 
+                  Ramadan dates will be adjusted by adding one day to account for Indian moon sighting practices.
+                </p>
+              )}
+            </IonCardContent>
+          </IonCard>
 
           <IonCard className="ion-margin-top">
             <IonCardContent>

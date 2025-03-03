@@ -4,7 +4,6 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonList,
   IonItem,
   IonLabel,
   IonCard,
@@ -17,17 +16,13 @@ import {
   IonSkeletonText,
   IonAccordionGroup,
   IonAccordion,
-  IonButton,
-  IonIcon,
-  IonButtons,
 } from "@ionic/react";
-import { format, isBefore, startOfDay, addMinutes } from "date-fns";
+import { format, isBefore, startOfDay } from "date-fns";
 import { useEffect, useState } from "react";
 import { calculatePrayerTimes, TimingType } from "../utils/prayerTimes";
 import { getCoordinates } from "../utils/storage";
 import { getRamadanDates } from "../utils/dates";
 import { reminderService } from "../utils/reminderService";
-import { notificationsOutline } from "ionicons/icons";
 import "./Calendar.css";
 
 interface DayTiming extends TimingType {
@@ -39,11 +34,19 @@ interface DayTiming extends TimingType {
 const Calendar: React.FC = () => {
   const [timings, setTimings] = useState<DayTiming[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const calculateMonthTimings = () => {
     setIsLoading(true);
+    setError(null);
     const coordinates = getCoordinates();
     const ramadanDates = getRamadanDates();
+
+    if (!coordinates) {
+      setError("Location not set. Please set your location in Settings to view prayer times.");
+      setIsLoading(false);
+      return;
+    }
 
     const days = ramadanDates.map(({ date, dayNumber, isToday }) => {
       const times = calculatePrayerTimes(date, coordinates);
@@ -66,10 +69,6 @@ const Calendar: React.FC = () => {
         todayTiming.iftar
       );
     }
-  };
-
-  const testReminders = () => {
-    reminderService.testReminders();
   };
 
   useEffect(() => {
@@ -208,7 +207,15 @@ const Calendar: React.FC = () => {
         </IonHeader>
 
         <div className="calendar-container">
-          {isLoading ? (
+          {error ? (
+            <IonCard>
+              <IonCardContent>
+                <IonItem lines="none">
+                  <IonLabel color="danger">{error}</IonLabel>
+                </IonItem>
+              </IonCardContent>
+            </IonCard>
+          ) : isLoading ? (
             Array.from({ length: 3 }).map((_, index) => (
               <div key={index}>{renderSkeletonCard()}</div>
             ))

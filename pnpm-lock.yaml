@@ -56,6 +56,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
+      hijri-converter:
+        specifier: ^1.1.1
+        version: 1.1.1
       ionicons:
         specifier: ^7.0.0
         version: 7.4.0
@@ -78,6 +81,9 @@ importers:
       '@capacitor/cli':
         specifier: 7.0.1
         version: 7.0.1
+      '@eslint/js':
+        specifier: ^9.21.0
+        version: 9.21.0
       '@testing-library/dom':
         specifier: '>=7.21.4'
         version: 10.4.0
@@ -2592,6 +2598,9 @@ packages:
   hexoid@2.0.0:
     resolution: {integrity: sha512-qlspKUK7IlSQv2o+5I7yhUd7TxlOG2Vr5LTa3ve2XSNVKAL/n/u/7KLvKmFNimomDIKvZFXWHv0T12mv7rT8Aw==}
     engines: {node: '>=8'}
+
+  hijri-converter@1.1.1:
+    resolution: {integrity: sha512-uY2oDZllg7wcgvY7rdrM1VUE5iEqNjKGtrBUJlzniAsY73FuC5mb0kzdqLE/bU9Q50Iwhn6b9/Udw8SUIXHlhQ==}
 
   history@4.10.1:
     resolution: {integrity: sha512-36nwAD620w12kuzPAsyINPWJqlNbij+hpK1k9XRloDtym8mxzGYl2c17LnV6IAGB2Dmg4tEa7G7DlawS0+qjew==}
@@ -7500,6 +7509,8 @@ snapshots:
   he@1.2.0: {}
 
   hexoid@2.0.0: {}
+
+  hijri-converter@1.1.1: {}
 
   history@4.10.1:
     dependencies:

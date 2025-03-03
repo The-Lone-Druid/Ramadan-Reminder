@@ -1,65 +1,136 @@
-import { LocalNotifications } from '@capacitor/local-notifications';
-import { TimingType } from './prayerTimes';
-import { format, parse } from 'date-fns';
-import { getManualTimeForDate } from './storage';
+import { LocalNotifications, LocalNotificationSchema, ActionPerformed } from '@capacitor/local-notifications';
+import { format } from 'date-fns';
 
-export const scheduleNotifications = async (times: TimingType) => {
-  // Request permission
-  const permResult = await LocalNotifications.requestPermissions();
-  if (!permResult.display) {
-    console.error('Notification permission denied');
-    return;
+export interface NotificationSchedule {
+  sehriTime: Date;
+  iftarTime: Date;
+  dayNumber: number;
+}
+
+const NOTIFICATION_CHANNEL_ID = 'ramadan-reminders';
+
+export const setupNotifications = async () => {
+  try {
+    // Create notification channel (Android only)
+    await LocalNotifications.createChannel({
+      id: NOTIFICATION_CHANNEL_ID,
+      name: 'Ramadan Reminders',
+      description: 'Notifications for Sehri and Iftar times',
+      importance: 5, // High importance
+      visibility: 1, // Public
+      sound: 'beep.wav',
+      vibration: true,
+      lights: true,
+      lightColor: '#488AFF'
+    });
+
+    // Register notification actions
+    await LocalNotifications.registerActionTypes({
+      types: [
+        {
+          id: 'SEHRI_ACTION',
+          actions: [
+            {
+              id: 'view',
+              title: 'View Times'
+            }
+          ]
+        },
+        {
+          id: 'IFTAR_ACTION',
+          actions: [
+            {
+              id: 'view',
+              title: 'View Times'
+            }
+          ]
+        }
+      ]
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Error setting up notifications:', error);
+    return false;
   }
+};
 
-  // Check for manual time entry
-  const manualEntry = getManualTimeForDate(times.sehri);
-  let sehriTime = times.sehri;
-  let iftarTime = times.iftar;
+export const scheduleRamadanNotifications = async (schedules: NotificationSchedule[]) => {
+  try {
+    // Cancel any existing notifications
+    const pending = await LocalNotifications.getPending();
+    if (pending.notifications.length > 0) {
+      await LocalNotifications.cancel(pending);
+    }
 
-  if (manualEntry) {
-    // Parse manual times
-    sehriTime = parse(manualEntry.sehri, 'HH:mm', times.sehri);
-    iftarTime = parse(manualEntry.iftar, 'HH:mm', times.iftar);
-  }
-
-  // Cancel any existing notifications
-  await LocalNotifications.cancel({ notifications: [] });
-
-  // Schedule notifications
-  await LocalNotifications.schedule({
-    notifications: [
+    // Schedule new notifications for each day
+    const notifications = schedules.flatMap((schedule) => [
       {
-        id: 1,
-        title: 'Sehri Time Approaching',
-        body: `Sehri ends at ${format(sehriTime, 'h:mm a')}. Please finish your meal.`,
-        schedule: { at: new Date(sehriTime.getTime() - 30 * 60 * 1000) },
-        sound: 'beep.wav',
-        actionTypeId: '',
-        extra: null
+        id: schedule.dayNumber * 2 - 1,
+        title: 'Sehri Time',
+        body: `Day ${schedule.dayNumber}: Sehri time is at ${format(schedule.sehriTime, 'hh:mm a')}`,
+        schedule: { at: new Date(schedule.sehriTime.getTime() - 30 * 60000) }, // 30 minutes before
+        channelId: NOTIFICATION_CHANNEL_ID,
+        actionTypeId: 'SEHRI_ACTION',
+        extra: {
+          dayNumber: schedule.dayNumber,
+          type: 'sehri'
+        }
       },
       {
-        id: 2,
-        title: 'Sehri Time Ending',
-        body: 'Sehri time is ending now. Please stop eating and drinking.',
-        schedule: { at: sehriTime },
-        sound: 'beep.wav',
-        actionTypeId: '',
-        extra: null
-      },
-      {
-        id: 3,
+        id: schedule.dayNumber * 2,
         title: 'Iftar Time',
-        body: 'It\'s time for Iftar! May Allah accept your fast.',
-        schedule: { at: iftarTime },
-        sound: 'beep.wav',
-        actionTypeId: '',
-        extra: null
+        body: `Day ${schedule.dayNumber}: Iftar time is at ${format(schedule.iftarTime, 'hh:mm a')}`,
+        schedule: { at: new Date(schedule.iftarTime.getTime() - 15 * 60000) }, // 15 minutes before
+        channelId: NOTIFICATION_CHANNEL_ID,
+        actionTypeId: 'IFTAR_ACTION',
+        extra: {
+          dayNumber: schedule.dayNumber,
+          type: 'iftar'
+        }
       }
-    ]
+    ]);
+
+    await LocalNotifications.schedule({
+      notifications
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Error scheduling notifications:', error);
+    return false;
+  }
+};
+
+export const cancelAllNotifications = async () => {
+  try {
+    const pending = await LocalNotifications.getPending();
+    if (pending.notifications.length > 0) {
+      await LocalNotifications.cancel(pending);
+    }
+    return true;
+  } catch (error) {
+    console.error('Error canceling notifications:', error);
+    return false;
+  }
+};
+
+// Add notification listeners
+export const addNotificationListeners = (
+  onReceived?: (notification: LocalNotificationSchema) => void,
+  onAction?: (notification: ActionPerformed) => void
+) => {
+  LocalNotifications.addListener('localNotificationReceived', (notification) => {
+    console.log('Notification received:', notification);
+    onReceived?.(notification);
+  });
+
+  LocalNotifications.addListener('localNotificationActionPerformed', (notification) => {
+    console.log('Notification action performed:', notification);
+    onAction?.(notification);
   });
 };
 
-export const checkNotificationPermissions = async () => {
-  const permResult = await LocalNotifications.requestPermissions();
-  return permResult.display;
+export const removeNotificationListeners = () => {
+  LocalNotifications.removeAllListeners();
 }; 

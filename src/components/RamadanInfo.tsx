@@ -10,8 +10,13 @@ import {
 } from "@ionic/react";
 import { format } from "date-fns";
 import { RamadanData } from "../types/ramadan";
-import { isRamadan, RAMADAN_2025 } from "../utils/dates";
-import { calendarNumberOutline, timeOutline, moonOutline } from "ionicons/icons";
+import { isRamadan, getCurrentRamadanDates } from "../utils/dates";
+import {
+  calendarNumberOutline,
+  timeOutline,
+  moonOutline,
+  informationCircleOutline,
+} from "ionicons/icons";
 import "./RamadanInfo.css";
 
 interface RamadanInfoProps {
@@ -21,12 +26,14 @@ interface RamadanInfoProps {
 const RamadanInfo: React.FC<RamadanInfoProps> = ({ data }) => {
   if (!data) return null;
 
+  const ramadanDates = getCurrentRamadanDates();
+
   const getRamadanStatus = () => {
     if (!isRamadan()) {
       const today = new Date();
-      if (today < RAMADAN_2025.START) {
+      if (today < ramadanDates.START) {
         return `Ramadan starts on ${format(
-          RAMADAN_2025.START,
+          ramadanDates.START,
           "EEEE, MMMM d, yyyy"
         )}`;
       } else {
@@ -38,8 +45,11 @@ const RamadanInfo: React.FC<RamadanInfoProps> = ({ data }) => {
 
   const getDaysRemaining = () => {
     if (!isRamadan()) {
-      if (new Date() < RAMADAN_2025.START) {
-        const days = Math.ceil((RAMADAN_2025.START.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+      if (new Date() < ramadanDates.START) {
+        const days = Math.ceil(
+          (ramadanDates.START.getTime() - new Date().getTime()) /
+            (1000 * 60 * 60 * 24)
+        );
         return `${days} days until Ramadan`;
       }
       return "Ramadan has ended";
@@ -52,15 +62,21 @@ const RamadanInfo: React.FC<RamadanInfoProps> = ({ data }) => {
       <IonCardHeader>
         <IonCardTitle>
           <IonIcon icon={moonOutline} className="ramadan-icon" />
-          Ramadan Status
+          Ramadan {ramadanDates.YEAR}
         </IonCardTitle>
       </IonCardHeader>
       <IonCardContent>
         <div className="status-section">
           <h2 className="status-title">{getRamadanStatus()}</h2>
           <p className="status-subtitle">{getDaysRemaining()}</p>
+          {ramadanDates.dateAdjustment && (
+            <div className="date-adjustment-notice">
+              <IonIcon icon={informationCircleOutline} />
+              <p>{ramadanDates.dateAdjustment.reason}</p>
+            </div>
+          )}
         </div>
-        
+
         <IonGrid className="info-grid">
           <IonRow>
             <IonCol size="6">
