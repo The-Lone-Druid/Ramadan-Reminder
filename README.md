@@ -15,6 +15,7 @@ A mobile application built with Ionic and Capacitor to help users track Ramadan 
 
 - Node.js (v16 or higher)
 - npm (v8 or higher)
+- pnpm (v10 latest only)
 - Android Studio (for Android development)
 - Xcode (for iOS development, Mac only)
 - Ionic CLI (`npm install -g @ionic/cli`)
@@ -31,13 +32,13 @@ A mobile application built with Ionic and Capacitor to help users track Ramadan 
 2. Install dependencies:
 
     ```bash
-    npm install
+    pnpm install
     ```
 
 3. Install Capacitor plugins:
 
     ```bash
-    npm install @capacitor/core @capacitor/app @capacitor/geolocation @capacitor/local-notifications @capacitor-community/text-to-speech
+    pnpm install @capacitor/core @capacitor/app @capacitor/geolocation @capacitor/local-notifications @capacitor-community/text-to-speech
     ```
 
 ## Development
@@ -72,13 +73,13 @@ ionic serve
 
     ```bash
     # Patch version (1.0.0 -> 1.0.1)
-    npm run release:patch
+    pnpm run release:patch
 
     # Minor version (1.0.1 -> 1.1.0)
-    npm run release:minor
+    pnpm run release:minor
 
     # Major version (1.1.0 -> 2.0.0)
-    npm run release:major
+    pnpm run release:major
     ```
 
 2. Build the release version:
@@ -112,4 +113,196 @@ Version format: `MAJOR.MINOR.PATCH`
 - MINOR: New features
 - PATCH: Bug fixes
 
-### Project Structure
+## Features in Detail
+
+### Prayer Times Calculation
+
+- Uses the Adhan library for accurate prayer time calculations
+- Supports multiple calculation methods
+- Automatically adjusts for daylight savings
+- Location-based calculations using device GPS
+
+### Notifications System
+
+- Scheduled notifications for Sehri and Iftar
+- Customizable notification times
+- Persistent across device restarts
+- Support for both sound and vibration
+
+### Voice Reminders
+
+- Text-to-Speech (TTS) support
+- Customizable voice settings:
+  - Language selection
+  - Speech rate
+  - Volume control
+  - Pitch adjustment
+- Test functionality in settings
+
+### Location Services
+
+- GPS-based location detection
+- Manual coordinate input
+- Location caching for offline use
+- Permission handling for Android and iOS
+
+### Dark Mode
+
+- System theme detection
+- Manual theme toggle
+- Consistent styling across components
+- Optimized for OLED displays
+
+## Configuration
+
+### Capacitor Configuration
+
+```typescript
+// capacitor.config.ts
+import { CapacitorConfig } from '@capacitor/cli';
+
+const config: CapacitorConfig = {
+  appId: 'com.ramadanreminder.app',
+  appName: 'Ramadan Reminder',
+  webDir: 'dist',
+  server: {
+    androidScheme: 'https'
+  },
+  plugins: {
+    LocalNotifications: {
+      smallIcon: "ic_notification",
+      iconColor: "#488AFF"
+    },
+    Geolocation: {
+      permissions: {
+        android: {
+          minSdkVersion: 23
+        }
+      }
+    }
+  }
+};
+
+export default config;
+```
+
+### Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+VITE_APP_NAME=Ramadan Reminder
+VITE_APP_VERSION=1.0.0
+```
+
+## Testing
+
+### Unit Tests
+
+```bash
+pnpm run test
+```
+
+### End-to-End Tests
+
+```bash
+pnpm run e2e
+```
+
+### Manual Testing Checklist
+
+- [ ] Location detection
+- [ ] Prayer time calculations
+- [ ] Notification scheduling
+- [ ] Voice reminder playback
+- [ ] Dark mode switching
+- [ ] Settings persistence
+- [ ] Offline functionality
+
+## Deployment
+
+### Play Store Deployment Checklist
+
+1. Update version numbers
+2. Update changelog
+3. Generate signed bundle
+4. Test bundle on test device
+5. Create store listing:
+   - App description
+   - Screenshots
+   - Feature graphic
+   - Privacy policy
+6. Submit for review
+
+### Release Notes Template
+
+```markdown
+## [Version X.Y.Z] - YYYY-MM-DD
+
+### Added
+- New feature 1
+- New feature 2
+
+### Changed
+- Modified feature 1
+- Modified feature 2
+
+### Fixed
+- Bug fix 1
+- Bug fix 2
+```
+
+## Performance Optimization
+
+### Bundle Size Optimization
+
+- Use code splitting
+- Lazy load components
+- Optimize images
+- Minify assets
+
+### Runtime Performance
+
+- Implement virtual scrolling for long lists
+- Cache API responses
+- Optimize animations
+- Use web workers for heavy calculations
+
+## Security
+
+### Data Storage
+
+- Sensitive data encryption
+- Secure storage of coordinates
+- No cloud storage of personal data
+
+### API Security
+
+- HTTPS only
+- Input validation
+- Rate limiting
+- Error handling
+
+## Support
+
+### Getting Help
+
+- Create an issue in the GitHub repository
+- Email support: <support@example.com>
+- Twitter: [@yourusername](https://twitter.com/yourusername)
+
+### Reporting Bugs
+
+1. Use the GitHub issue tracker
+2. Include steps to reproduce
+3. Include expected vs actual behavior
+4. Include screenshots if applicable
+5. Include device and OS information
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+Made with ❤️ by [Your Name](https://github.com/yourusername)
