@@ -36,6 +36,7 @@
     "react-router-dom": "^5.3.4"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "7.0.1",
     "@testing-library/dom": ">=7.21.4",
     "@testing-library/jest-dom": "^5.16.5",
@@ -60,5 +61,10 @@
     "vite": "~5.2.0",
     "vitest": "^0.34.6"
   },
-  "description": "An Ionic project"
+  "description": "An Ionic project",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp"
+    ]
+  }
 }
