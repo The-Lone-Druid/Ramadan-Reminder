@@ -1,6 +1,6 @@
 import { format, addMinutes, isBefore, isAfter } from "date-fns";
-import { TextToSpeech } from '@capacitor-community/text-to-speech';
-import { getTTSSettings } from './storage';
+import { TextToSpeech } from "@capacitor-community/text-to-speech";
+import { getTTSSettings } from "./storage";
 
 interface Reminder {
   time: Date;
@@ -68,18 +68,18 @@ class ReminderService {
         volume: ttsSettings.volume,
       });
     } catch (error) {
-      console.error('Text-to-Speech error:', error);
+      console.error("Text-to-Speech error:", error);
       // Fallback to default English if Indian English is not available
       try {
         await TextToSpeech.speak({
           text: message,
-          lang: 'en-US',
+          lang: "en-US",
           rate: ttsSettings.rate,
           pitch: ttsSettings.pitch,
           volume: ttsSettings.volume,
         });
       } catch (fallbackError) {
-        console.error('Fallback Text-to-Speech error:', fallbackError);
+        console.error("Fallback Text-to-Speech error:", fallbackError);
       }
     } finally {
       this.isSpeaking = false;
@@ -179,30 +179,30 @@ class ReminderService {
       this.speak(
         `${testPrefix}10 minutes until Sehri ends. Please complete your meal.`
       );
-    }, 2000);
+    }, 6000);
 
     setTimeout(() => {
       this.speak(
         `${testPrefix}5 minutes until Sehri ends. Please finish your meal.`
       );
-    }, 4000);
+    }, 12000);
 
     // Test Iftar reminders in sequence
     setTimeout(() => {
       this.speak(
         `${testPrefix}It's 30 minutes until Iftar time. Please prepare for Iftar.`
       );
-    }, 6000);
+    }, 18000);
 
     setTimeout(() => {
       this.speak(
         `${testPrefix}10 minutes until Iftar time. Please get ready to break your fast.`
       );
-    }, 8000);
+    }, 24000);
 
     setTimeout(() => {
       this.speak(`${testPrefix}It's Iftar time! You can now break your fast.`);
-    }, 10000);
+    }, 30000);
   }
 
   public clearAllReminders(): void {

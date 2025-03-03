@@ -1,6 +1,4 @@
 .ramadan-info-card {
-  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
-  color: var(--ion-color-primary-contrast);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -23,7 +21,6 @@
   font-size: 1.5em;
   font-weight: 600;
   margin: 0 0 8px 0;
-  color: var(--ion-color-primary-contrast);
 }
 
 .status-subtitle {
@@ -111,4 +108,4 @@
 
 .ramadan-info-card {
   animation: fadeInUp 0.5s ease-out;
-} 
+}

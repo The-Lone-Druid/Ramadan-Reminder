@@ -1,10 +1,27 @@
 ion-card {
-  margin: 1rem;
+  margin: 1rem 0;
+  background: var(--ion-card-background);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--ion-color-light-shade);
 }
 
 ion-card-header {
-  background: var(--ion-color-primary-tint);
-  color: var(--ion-color-primary-contrast);
+  background: var(--ion-color-light);
+  border-radius: 8px 8px 0 0;
+  padding: 1rem;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+}
+
+ion-card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+ion-card-content {
+  padding: 1rem;
+  background: var(--ion-card-background);
 }
 
 ion-icon {
@@ -14,43 +31,65 @@ ion-icon {
 ion-item {
   --padding-start: 1rem;
   --inner-padding-end: 1rem;
+  --background: var(--ion-color-light);
+  --border-radius: 8px;
+  --border-color: var(--ion-color-light-shade);
 }
 
 .home-container {
-  padding: 16px;
+  padding: 1rem;
   max-width: 800px;
   margin: 0 auto;
+  background: var(--ion-background-color);
 }
 
 .loading-container {
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 100%;
+  background: var(--ion-background-color);
 }
 
 .error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
   text-align: center;
-  padding: 20px;
+  padding: 2rem;
+  color: var(--ion-color-danger);
+  background: var(--ion-background-color);
 }
 
 .error-message p {
-  color: var(--ion-color-danger);
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 }
 
 .error-message button {
-  background: var(--ion-color-primary);
-  color: white;
-  border: none;
-  padding: 8px 16px;
+  padding: 0.5rem 1rem;
   border-radius: 4px;
+  border: none;
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
   cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.error-message button:hover {
+  background: var(--ion-color-primary-shade);
 }
 
 /* Optimize animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .home-container > * {
@@ -61,7 +100,18 @@ ion-item {
 /* Optimize for mobile */
 @media (max-width: 768px) {
   .home-container {
-    padding: 8px;
+    padding: 0.5rem;
+  }
+
+  .calendar-header,
+  .calendar-row {
+    padding: 0.5rem;
+    gap: 0.25rem;
+  }
+
+  .calendar-cell {
+    padding: 0.25rem;
+    font-size: 0.9rem;
   }
 }
 
@@ -70,4 +120,79 @@ ion-item {
   .home-container {
     max-width: 1000px;
   }
-} 
+}
+
+/* Prayer times styles */
+.prayer-times ion-item {
+  --background: var(--ion-color-light);
+  --border-radius: 8px;
+  margin-bottom: 0.5rem;
+  --padding-start: 1rem;
+  --inner-padding-end: 1rem;
+  --border-color: var(--ion-color-light-shade);
+}
+
+.prayer-times ion-icon {
+  color: var(--ion-color-primary);
+  font-size: 1.5rem;
+}
+
+.prayer-times h2 {
+  color: var(--ion-text-color);
+  font-size: 1rem;
+  margin: 0;
+}
+
+.prayer-times p {
+  color: var(--ion-color-medium);
+  font-size: 0.9rem;
+  margin: 0.25rem 0 0 0;
+}
+
+/* Calendar styles */
+.calendar-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--ion-color-medium);
+  border-radius: 8px 8px 0 0;
+  color: var(--ion-color-medium-contrast);
+}
+
+.calendar-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+  background: var(--ion-card-background);
+}
+
+.calendar-row:last-child {
+  border-bottom: none;
+}
+
+.calendar-cell {
+  text-align: center;
+  padding: 0.5rem;
+  border-radius: 4px;
+  background: var(--ion-color-light);
+  color: var(--ion-text-color);
+  border: 1px solid var(--ion-color-light-shade);
+}
+
+.calendar-cell.today {
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  border-color: var(--ion-color-primary);
+}
+
+.calendar-cell.past {
+  opacity: 0.5;
+  background: var(--ion-color-light-shade);
+}
+
+.calendar-cell.future {
+  opacity: 0.8;
+}

@@ -27,7 +27,7 @@ ion-content {
 .calendar-container ion-card-title {
   font-size: var(--font-size-lg);
   font-weight: 600;
-  color: var(--ion-color-dark);
+  color: var(--ion-color-secondary-contrast);
 }
 
 ion-card {
@@ -104,15 +104,6 @@ ion-label p {
 
 .today-card ion-card-header {
   background: var(--ion-color-primary);
-}
-
-.edit-button {
-  margin-top: var(--spacing-sm);
-  --color: var(--ion-color-primary);
-}
-
-.edit-button:hover {
-  --color: var(--ion-color-primary);
 }
 
 .edit-button ion-icon {

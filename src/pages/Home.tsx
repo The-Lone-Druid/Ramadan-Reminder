@@ -125,19 +125,21 @@ const Home: React.FC = () => {
           <IonRefresherContent />
         </IonRefresher>
 
-        {loading ? (
-          <>
-            <Skeleton type="ramadan-info" />
-            <Skeleton type="prayer-times" />
-            <Skeleton type="calendar" />
-          </>
-        ) : (
-          <div className="home-container">
-            <RamadanInfo data={data} />
-            <PrayerTimes data={data} />
-            <Calendar data={data} />
-          </div>
-        )}
+        <div className="home-container">
+          {loading ? (
+            <>
+              <Skeleton type="ramadan-info" />
+              <Skeleton type="prayer-times" />
+              <Skeleton type="calendar" />
+            </>
+          ) : (
+            <>
+              <RamadanInfo data={data} />
+              <PrayerTimes data={data} />
+              <Calendar data={data} />
+            </>
+          )}
+        </div>
       </IonContent>
     </IonPage>
   );

@@ -15,8 +15,14 @@ import {
   IonRange,
   IonSelect,
   IonSelectOption,
+  IonCard,
+  IonCardContent,
 } from "@ionic/react";
-import { locationOutline, notificationsOutline } from "ionicons/icons";
+import {
+  locationOutline,
+  notificationsOutline,
+  playCircleOutline,
+} from "ionicons/icons";
 import { useEffect, useState } from "react";
 import { Coordinates } from "adhan";
 import {
@@ -33,6 +39,7 @@ import {
 } from "../utils/notifications";
 import { calculatePrayerTimes } from "../utils/prayerTimes";
 import { TTSSettings } from "../types/ramadan";
+import { reminderService } from "../utils/reminderService";
 import "./Settings.css";
 
 const Settings: React.FC = () => {
@@ -159,6 +166,20 @@ const Settings: React.FC = () => {
     saveTTSSettings(newSettings);
   };
 
+  const testVoiceReminders = () => {
+    reminderService.testReminders();
+  };
+
+  const testNotifications = async () => {
+    const times = calculatePrayerTimes(new Date(), getCoordinates());
+    await scheduleNotifications(times);
+    presentToast({
+      message: "Test notifications scheduled!",
+      duration: 2000,
+      position: "bottom",
+    });
+  };
+
   return (
     <IonPage>
       <IonHeader>
@@ -276,6 +297,31 @@ const Settings: React.FC = () => {
               onIonChange={(e) => handleTTSChange("pitch", e.detail.value)}
             />
           </IonItem>
+
+          <IonCard className="ion-margin-top">
+            <IonCardContent>
+              <h2>Test Settings</h2>
+              <p>Test your notification and voice settings</p>
+
+              <IonButton
+                expand="block"
+                onClick={testVoiceReminders}
+                className="ion-margin-vertical"
+              >
+                <IonIcon icon={playCircleOutline} slot="start" />
+                Test Voice Reminders
+              </IonButton>
+
+              <IonButton
+                expand="block"
+                onClick={testNotifications}
+                className="ion-margin-vertical"
+              >
+                <IonIcon icon={notificationsOutline} slot="start" />
+                Test Notifications
+              </IonButton>
+            </IonCardContent>
+          </IonCard>
         </IonList>
       </IonContent>
     </IonPage>
