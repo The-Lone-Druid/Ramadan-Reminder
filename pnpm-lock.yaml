@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@capacitor-community/text-to-speech':
+        specifier: ^6.0.0
+        version: 6.0.0(@capacitor/core@7.0.1)
+      '@capacitor/android':
+        specifier: ^7.0.1
+        version: 7.0.1(@capacitor/core@7.0.1)
       '@capacitor/app':
         specifier: 7.0.0
         version: 7.0.0(@capacitor/core@7.0.1)
@@ -20,6 +26,9 @@ importers:
       '@capacitor/haptics':
         specifier: 7.0.0
         version: 7.0.0(@capacitor/core@7.0.1)
+      '@capacitor/ios':
+        specifier: ^7.0.1
+        version: 7.0.1(@capacitor/core@7.0.1)
       '@capacitor/keyboard':
         specifier: 7.0.0
         version: 7.0.0(@capacitor/core@7.0.1)
@@ -633,6 +642,16 @@ packages:
     resolution: {integrity: sha512-Y3IR1cRnOxOCDvMmNiym7XpXQ93iGDDPHx+Zj+NM+rg0fBaShfQLkg+hKPaZCEvg5N/LeCo4+Rj/i3FuJsIQaw==}
     engines: {node: '>=6.9.0'}
 
+  '@capacitor-community/text-to-speech@6.0.0':
+    resolution: {integrity: sha512-aKQ+S8q0T3Kqr2PdJI4xLksN8FFOqJI7vlX9sqWrPXPBWa8DQUSSV9M8tvjUq6B9+63er/KSe42ZKMVrD5usKw==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
+
+  '@capacitor/android@7.0.1':
+    resolution: {integrity: sha512-jukJJHfkcyEBOkFBJRD3EwXMIIQo7lSv0ExPWgsIliPdGXLAj6ElvK2JaYEzec3vKyLc4RTNFVv0PMEU0vnImg==}
+    peerDependencies:
+      '@capacitor/core': ^7.0.0
+
   '@capacitor/app@7.0.0':
     resolution: {integrity: sha512-/UFwfPFsw/Jen6vjrV0lfTBOQWSaDDdmrYXKpYg4Xn8hwj0xrrRPXxC43j7VmPoj9AFMVPA+hx94ygqjChPASQ==}
     peerDependencies:
@@ -655,6 +674,11 @@ packages:
     resolution: {integrity: sha512-8uI8rWyAbq8EzkjS+sHZSncyzujHzVbuLKgj8J5H0yUL6+r26F16gVA2iuQuIBvzbSMy7Y0/pUuWlwZr/H8AKg==}
     peerDependencies:
       '@capacitor/core': '>=7.0.0'
+
+  '@capacitor/ios@7.0.1':
+    resolution: {integrity: sha512-RN6S1C1k7ue57DFmJM4EizzsYBrahTTiMhcnlHspFLaojgHbFWZbYq1VriuRKysPU1ka/P+klsdtRFsB5K9jyw==}
+    peerDependencies:
+      '@capacitor/core': ^7.0.0
 
   '@capacitor/keyboard@7.0.0':
     resolution: {integrity: sha512-Tqwy8wG+sx4UqiFCX4Q+bFw6uKgG7BiHKAPpeefoIgoEB8H8Jf3xZNZoVPnJIMuPsCdSvuyHXZbJXH9IEEirGA==}
@@ -4107,6 +4131,14 @@ snapshots:
       '@babel/helper-string-parser': 7.25.9
       '@babel/helper-validator-identifier': 7.25.9
 
+  '@capacitor-community/text-to-speech@6.0.0(@capacitor/core@7.0.1)':
+    dependencies:
+      '@capacitor/core': 7.0.1
+
+  '@capacitor/android@7.0.1(@capacitor/core@7.0.1)':
+    dependencies:
+      '@capacitor/core': 7.0.1
+
   '@capacitor/app@7.0.0(@capacitor/core@7.0.1)':
     dependencies:
       '@capacitor/core': 7.0.1
@@ -4143,6 +4175,10 @@ snapshots:
       '@capacitor/synapse': 1.0.2
 
   '@capacitor/haptics@7.0.0(@capacitor/core@7.0.1)':
+    dependencies:
+      '@capacitor/core': 7.0.1
+
+  '@capacitor/ios@7.0.1(@capacitor/core@7.0.1)':
     dependencies:
       '@capacitor/core': 7.0.1
 

@@ -196,7 +196,7 @@ const Calendar: React.FC = () => {
           </IonButtons> */}
         </IonToolbar>
       </IonHeader>
-      <IonContent fullscreen>
+      <IonContent>
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent />
         </IonRefresher>

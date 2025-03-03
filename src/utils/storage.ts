@@ -1,9 +1,11 @@
 import { Coordinates } from "adhan";
+import { TTSSettings } from '../types/ramadan';
 
 const STORAGE_KEYS = {
   COORDINATES: "ramadan-coordinates",
   NOTIFICATIONS: "ramadan-notifications",
   MANUAL_TIMES: "ramadan-manual-times",
+  TTS_SETTINGS: 'tts_settings',
 };
 
 interface NotificationSettings {
@@ -20,6 +22,14 @@ export interface ManualTimeEntry {
 const defaultCoordinates: Coordinates = {
   latitude: 23.8103, // Default to Dhaka, Bangladesh
   longitude: 90.4125,
+};
+
+const DEFAULT_TTS_SETTINGS: TTSSettings = {
+  enabled: true,
+  volume: 1.0,
+  language: 'en-IN',
+  rate: 1.0,
+  pitch: 1.0,
 };
 
 export const saveCoordinates = (coordinates: Coordinates): void => {
@@ -100,5 +110,24 @@ export const getManualTimeForDate = (date: Date): ManualTimeEntry | null => {
   } catch (error) {
     console.error("Error getting manual time for date:", error);
     return null;
+  }
+};
+
+export const getTTSSettings = (): TTSSettings => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.TTS_SETTINGS);
+    if (!stored) return DEFAULT_TTS_SETTINGS;
+    return JSON.parse(stored);
+  } catch (error) {
+    console.error('Error getting TTS settings:', error);
+    return DEFAULT_TTS_SETTINGS;
+  }
+};
+
+export const saveTTSSettings = (settings: TTSSettings): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.TTS_SETTINGS, JSON.stringify(settings));
+  } catch (error) {
+    console.error('Error saving TTS settings:', error);
   }
 };

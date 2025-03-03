@@ -12,20 +12,35 @@ import {
   IonButton,
   IonIcon,
   useIonToast,
-} from '@ionic/react';
-import { locationOutline, notificationsOutline } from 'ionicons/icons';
-import { useEffect, useState } from 'react';
-import { Coordinates } from 'adhan';
-import { saveCoordinates, getCoordinates, saveNotificationSettings, getNotificationSettings } from '../utils/storage';
-import { scheduleNotifications, checkNotificationPermissions } from '../utils/notifications';
-import { calculatePrayerTimes } from '../utils/prayerTimes';
-import './Settings.css';
+  IonRange,
+  IonSelect,
+  IonSelectOption,
+} from "@ionic/react";
+import { locationOutline, notificationsOutline } from "ionicons/icons";
+import { useEffect, useState } from "react";
+import { Coordinates } from "adhan";
+import {
+  saveCoordinates,
+  getCoordinates,
+  saveNotificationSettings,
+  getNotificationSettings,
+  getTTSSettings,
+  saveTTSSettings,
+} from "../utils/storage";
+import {
+  scheduleNotifications,
+  checkNotificationPermissions,
+} from "../utils/notifications";
+import { calculatePrayerTimes } from "../utils/prayerTimes";
+import { TTSSettings } from "../types/ramadan";
+import "./Settings.css";
 
 const Settings: React.FC = () => {
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const [sehriNotification, setSehriNotification] = useState(true);
   const [iftarNotification, setIftarNotification] = useState(true);
+  const [ttsSettings, setTTSSettings] = useState<TTSSettings>(getTTSSettings());
   const [presentToast] = useIonToast();
 
   useEffect(() => {
@@ -47,21 +62,28 @@ const Settings: React.FC = () => {
           const newLng = position.coords.longitude.toString();
           setLatitude(newLat);
           setLongitude(newLng);
-          saveCoordinates({ latitude: position.coords.latitude, longitude: position.coords.longitude });
-          updateNotifications({ latitude: position.coords.latitude, longitude: position.coords.longitude });
+          saveCoordinates({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+          updateNotifications({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
           presentToast({
-            message: 'Location updated successfully!',
+            message: "Location updated successfully!",
             duration: 2000,
-            position: 'bottom',
+            position: "bottom",
           });
         },
         (error) => {
-          console.error('Error getting location:', error);
+          console.error("Error getting location:", error);
           presentToast({
-            message: 'Error getting location. Please enter coordinates manually.',
+            message:
+              "Error getting location. Please enter coordinates manually.",
             duration: 3000,
-            position: 'bottom',
-            color: 'danger',
+            position: "bottom",
+            color: "danger",
           });
         }
       );
@@ -71,13 +93,13 @@ const Settings: React.FC = () => {
   const handleCoordinateChange = () => {
     const lat = parseFloat(latitude);
     const lng = parseFloat(longitude);
-    
+
     if (isNaN(lat) || isNaN(lng)) {
       presentToast({
-        message: 'Please enter valid coordinates',
+        message: "Please enter valid coordinates",
         duration: 3000,
-        position: 'bottom',
-        color: 'danger',
+        position: "bottom",
+        color: "danger",
       });
       return;
     }
@@ -86,9 +108,9 @@ const Settings: React.FC = () => {
     saveCoordinates(coordinates);
     updateNotifications(coordinates);
     presentToast({
-      message: 'Settings saved successfully!',
+      message: "Settings saved successfully!",
       duration: 2000,
-      position: 'bottom',
+      position: "bottom",
     });
   };
 
@@ -97,10 +119,10 @@ const Settings: React.FC = () => {
       const hasPermission = await checkNotificationPermissions();
       if (!hasPermission) {
         presentToast({
-          message: 'Please enable notifications in your device settings',
+          message: "Please enable notifications in your device settings",
           duration: 3000,
-          position: 'bottom',
-          color: 'warning',
+          position: "bottom",
+          color: "warning",
         });
         return;
       }
@@ -110,19 +132,31 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleNotificationChange = (type: 'sehri' | 'iftar', checked: boolean) => {
-    if (type === 'sehri') {
+  const handleNotificationChange = (
+    type: "sehri" | "iftar",
+    checked: boolean
+  ) => {
+    if (type === "sehri") {
       setSehriNotification(checked);
     } else {
       setIftarNotification(checked);
     }
 
     saveNotificationSettings({
-      sehri: type === 'sehri' ? checked : sehriNotification,
-      iftar: type === 'iftar' ? checked : iftarNotification,
+      sehri: type === "sehri" ? checked : sehriNotification,
+      iftar: type === "iftar" ? checked : iftarNotification,
     });
 
     updateNotifications(getCoordinates());
+  };
+
+  const handleTTSChange = (key: keyof TTSSettings, value: any) => {
+    const newSettings = {
+      ...ttsSettings,
+      [key]: value,
+    };
+    setTTSSettings(newSettings);
+    saveTTSSettings(newSettings);
   };
 
   return (
@@ -132,7 +166,7 @@ const Settings: React.FC = () => {
           <IonTitle>Settings</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent fullscreen>
+      <IonContent>
         <IonHeader collapse="condense">
           <IonToolbar>
             <IonTitle size="large">Settings</IonTitle>
@@ -146,23 +180,27 @@ const Settings: React.FC = () => {
             <IonInput
               type="number"
               value={latitude}
-              onIonChange={e => setLatitude(e.detail.value!)}
+              onIonChange={(e) => setLatitude(e.detail.value!)}
               onIonBlur={handleCoordinateChange}
             />
           </IonItem>
-          
+
           <IonItem>
             <IonIcon icon={locationOutline} slot="start" />
             <IonLabel position="stacked">Longitude</IonLabel>
             <IonInput
               type="number"
               value={longitude}
-              onIonChange={e => setLongitude(e.detail.value!)}
+              onIonChange={(e) => setLongitude(e.detail.value!)}
               onIonBlur={handleCoordinateChange}
             />
           </IonItem>
 
-          <IonButton expand="block" onClick={getCurrentLocation} className="ion-margin">
+          <IonButton
+            expand="block"
+            onClick={getCurrentLocation}
+            className="ion-margin"
+          >
             Get Current Location
           </IonButton>
 
@@ -171,7 +209,9 @@ const Settings: React.FC = () => {
             <IonLabel>Sehri Notification</IonLabel>
             <IonToggle
               checked={sehriNotification}
-              onIonChange={e => handleNotificationChange('sehri', e.detail.checked)}
+              onIonChange={(e) =>
+                handleNotificationChange("sehri", e.detail.checked)
+              }
             />
           </IonItem>
 
@@ -180,7 +220,60 @@ const Settings: React.FC = () => {
             <IonLabel>Iftar Notification</IonLabel>
             <IonToggle
               checked={iftarNotification}
-              onIonChange={e => handleNotificationChange('iftar', e.detail.checked)}
+              onIonChange={(e) =>
+                handleNotificationChange("iftar", e.detail.checked)
+              }
+            />
+          </IonItem>
+
+          <IonItem>
+            <IonLabel>Voice Settings</IonLabel>
+          </IonItem>
+          <IonItem>
+            <IonLabel>Enable Voice Reminders</IonLabel>
+            <IonToggle
+              checked={ttsSettings.enabled}
+              onIonChange={(e) => handleTTSChange("enabled", e.detail.checked)}
+            />
+          </IonItem>
+          <IonItem>
+            <IonLabel>Voice Language</IonLabel>
+            <IonSelect
+              value={ttsSettings.language}
+              onIonChange={(e) => handleTTSChange("language", e.detail.value)}
+            >
+              <IonSelectOption value="en-IN">Indian English</IonSelectOption>
+              <IonSelectOption value="en-US">US English</IonSelectOption>
+            </IonSelect>
+          </IonItem>
+          <IonItem>
+            <IonLabel>Voice Volume</IonLabel>
+            <IonRange
+              value={ttsSettings.volume}
+              min={0}
+              max={1}
+              step={0.1}
+              onIonChange={(e) => handleTTSChange("volume", e.detail.value)}
+            />
+          </IonItem>
+          <IonItem>
+            <IonLabel>Speech Rate</IonLabel>
+            <IonRange
+              value={ttsSettings.rate}
+              min={0.5}
+              max={2}
+              step={0.1}
+              onIonChange={(e) => handleTTSChange("rate", e.detail.value)}
+            />
+          </IonItem>
+          <IonItem>
+            <IonLabel>Speech Pitch</IonLabel>
+            <IonRange
+              value={ttsSettings.pitch}
+              min={0.5}
+              max={2}
+              step={0.1}
+              onIonChange={(e) => handleTTSChange("pitch", e.detail.value)}
             />
           </IonItem>
         </IonList>
@@ -189,4 +282,4 @@ const Settings: React.FC = () => {
   );
 };
 
-export default Settings; 
+export default Settings;
