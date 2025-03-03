@@ -1,7 +1,7 @@
 {
   "name": "ramadan-reminder",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,10 @@
     "test.e2e": "cypress run",
     "test.unit": "vitest",
     "lint": "eslint",
-    "dev:android": "ionic cap run android -l --external --target 83c07fd7"
+    "dev:android": "ionic cap run android -l --external --target 83c07fd7",
+    "release:patch": "standard-version --release-as patch && node scripts/sync-version.js",
+    "release:minor": "standard-version --release-as minor && node scripts/sync-version.js",
+    "release:major": "standard-version --release-as major && node scripts/sync-version.js"
   },
   "dependencies": {
     "@capacitor-community/text-to-speech": "^6.0.0",
