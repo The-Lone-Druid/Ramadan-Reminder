@@ -1,5 +1,6 @@
 import { format, addMinutes, isBefore, isAfter } from "date-fns";
 import { TextToSpeech } from "@capacitor-community/text-to-speech";
+import { LocalNotifications } from "@capacitor/local-notifications";
 import { getTTSSettings } from "./storage";
 
 interface Reminder {
@@ -20,9 +21,11 @@ class ReminderService {
   private isInitialized: boolean = false;
   private isTestMode: boolean = false;
   private isSpeaking: boolean = false;
+  private notificationId: number = 1;
 
   private constructor() {
     this.activeReminders = new Map();
+    this.initializeNotifications();
   }
 
   public static getInstance(): ReminderService {
@@ -32,57 +35,89 @@ class ReminderService {
     return ReminderService.instance;
   }
 
-  private async speak(message: string): Promise<void> {
+  private async initializeNotifications() {
     if (!this.isInitialized) {
-      this.isInitialized = true;
-      // Request notification permission on first use
-      Notification.requestPermission();
-    }
-
-    const ttsSettings = getTTSSettings();
-    if (!ttsSettings.enabled) {
-      // If TTS is disabled, only show notification
-      const notification = new Notification("Ramadan Reminder", {
-        body: message,
-        icon: "/assets/icon/favicon.png",
-        badge: "/assets/icon/favicon.png",
-      });
-      return;
-    }
-
-    // Create notification
-    const notification = new Notification("Ramadan Reminder", {
-      body: message,
-      icon: "/assets/icon/favicon.png",
-      badge: "/assets/icon/favicon.png",
-    });
-
-    this.isSpeaking = true;
-    try {
-      // Use Capacitor's Text-to-Speech with settings
-      await TextToSpeech.speak({
-        text: message,
-        lang: ttsSettings.language,
-        rate: ttsSettings.rate,
-        pitch: ttsSettings.pitch,
-        volume: ttsSettings.volume,
-      });
-    } catch (error) {
-      console.error("Text-to-Speech error:", error);
-      // Fallback to default English if Indian English is not available
       try {
-        await TextToSpeech.speak({
-          text: message,
-          lang: "en-US",
-          rate: ttsSettings.rate,
-          pitch: ttsSettings.pitch,
-          volume: ttsSettings.volume,
+        // Request notification permissions
+        const permResult = await LocalNotifications.requestPermissions();
+        if (permResult.display !== "granted") {
+          console.error("Notification permission not granted");
+          return;
+        }
+
+        // Create notification channel for Android
+        await LocalNotifications.createChannel({
+          id: "ramadan-reminders",
+          name: "Ramadan Reminders",
+          description: "Notifications for Sehri and Iftar times",
+          importance: 5,
+          visibility: 1,
+          vibration: true,
+          lights: true,
         });
-      } catch (fallbackError) {
-        console.error("Fallback Text-to-Speech error:", fallbackError);
+
+        this.isInitialized = true;
+      } catch (error) {
+        console.error("Error initializing notifications:", error);
       }
-    } finally {
-      this.isSpeaking = false;
+    }
+  }
+
+  private async speak(message: string): Promise<void> {
+    try {
+      const ttsSettings = getTTSSettings();
+
+      // Show notification with incremental ID
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: "Ramadan Reminder",
+            body: message,
+            id: this.notificationId++,
+            schedule: { at: new Date() },
+            channelId: "ramadan-reminders",
+            smallIcon: "ic_notification",
+            iconColor: "#488AFF",
+          },
+        ],
+      });
+
+      // Reset ID if it gets too large
+      if (this.notificationId > 100000) {
+        this.notificationId = 1;
+      }
+
+      // If TTS is enabled, speak the message
+      if (ttsSettings.enabled) {
+        this.isSpeaking = true;
+        try {
+          await TextToSpeech.speak({
+            text: message,
+            lang: ttsSettings.language,
+            rate: ttsSettings.rate,
+            pitch: ttsSettings.pitch,
+            volume: ttsSettings.volume,
+          });
+        } catch (error) {
+          console.error("Text-to-Speech error:", error);
+          // Fallback to default English if Indian English is not available
+          try {
+            await TextToSpeech.speak({
+              text: message,
+              lang: "en-US",
+              rate: ttsSettings.rate,
+              pitch: ttsSettings.pitch,
+              volume: ttsSettings.volume,
+            });
+          } catch (fallbackError) {
+            console.error("Fallback Text-to-Speech error:", fallbackError);
+          }
+        } finally {
+          this.isSpeaking = false;
+        }
+      }
+    } catch (error) {
+      console.error("Error in speak function:", error);
     }
   }
 
@@ -163,46 +198,156 @@ class ReminderService {
     });
   }
 
-  public testReminders(): void {
+  public async testReminders(): Promise<void> {
     this.clearAllReminders();
-    const now = new Date();
     const testPrefix = "TEST: ";
 
-    // Test Sehri reminders in sequence
-    setTimeout(() => {
-      this.speak(
-        `${testPrefix}It's 30 minutes until Sehri time. Please prepare for Sehri.`
-      );
-    }, 0);
+    try {
+      // Test Sehri reminders in sequence
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: "Ramadan Reminder",
+            body: `${testPrefix}It's 30 minutes until Sehri time. Please prepare for Sehri.`,
+            id: this.notificationId++,
+            schedule: { at: new Date() },
+            channelId: "ramadan-reminders",
+            smallIcon: "ic_notification",
+            iconColor: "#488AFF",
+          }
+        ]
+      });
 
-    setTimeout(() => {
-      this.speak(
-        `${testPrefix}10 minutes until Sehri ends. Please complete your meal.`
-      );
-    }, 6000);
+      await new Promise((resolve) => setTimeout(resolve, 6000));
 
-    setTimeout(() => {
-      this.speak(
-        `${testPrefix}5 minutes until Sehri ends. Please finish your meal.`
-      );
-    }, 12000);
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: "Ramadan Reminder",
+            body: `${testPrefix}10 minutes until Sehri ends. Please complete your meal.`,
+            id: this.notificationId++,
+            schedule: { at: new Date() },
+            channelId: "ramadan-reminders",
+            smallIcon: "ic_notification",
+            iconColor: "#488AFF",
+          }
+        ]
+      });
 
-    // Test Iftar reminders in sequence
-    setTimeout(() => {
-      this.speak(
-        `${testPrefix}It's 30 minutes until Iftar time. Please prepare for Iftar.`
-      );
-    }, 18000);
+      await new Promise((resolve) => setTimeout(resolve, 6000));
 
-    setTimeout(() => {
-      this.speak(
-        `${testPrefix}10 minutes until Iftar time. Please get ready to break your fast.`
-      );
-    }, 24000);
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: "Ramadan Reminder",
+            body: `${testPrefix}5 minutes until Sehri ends. Please finish your meal.`,
+            id: this.notificationId++,
+            schedule: { at: new Date() },
+            channelId: "ramadan-reminders",
+            smallIcon: "ic_notification",
+            iconColor: "#488AFF",
+          }
+        ]
+      });
 
-    setTimeout(() => {
-      this.speak(`${testPrefix}It's Iftar time! You can now break your fast.`);
-    }, 30000);
+      await new Promise((resolve) => setTimeout(resolve, 6000));
+
+      // Test Iftar reminders in sequence
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: "Ramadan Reminder",
+            body: `${testPrefix}It's 30 minutes until Iftar time. Please prepare for Iftar.`,
+            id: this.notificationId++,
+            schedule: { at: new Date() },
+            channelId: "ramadan-reminders",
+            smallIcon: "ic_notification",
+            iconColor: "#488AFF",
+          }
+        ]
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 6000));
+
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: "Ramadan Reminder",
+            body: `${testPrefix}10 minutes until Iftar time. Please get ready to break your fast.`,
+            id: this.notificationId++,
+            schedule: { at: new Date() },
+            channelId: "ramadan-reminders",
+            smallIcon: "ic_notification",
+            iconColor: "#488AFF",
+          }
+        ]
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 6000));
+
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: "Ramadan Reminder",
+            body: `${testPrefix}It's Iftar time! You can now break your fast.`,
+            id: this.notificationId++,
+            schedule: { at: new Date() },
+            channelId: "ramadan-reminders",
+            smallIcon: "ic_notification",
+            iconColor: "#488AFF",
+          }
+        ]
+      });
+
+      // Reset ID if it gets too large
+      if (this.notificationId > 100000) {
+        this.notificationId = 1;
+      }
+
+      // If TTS is enabled, speak the messages
+      const ttsSettings = getTTSSettings();
+      if (ttsSettings.enabled) {
+        const messages = [
+          `${testPrefix}It's 30 minutes until Sehri time. Please prepare for Sehri.`,
+          `${testPrefix}10 minutes until Sehri ends. Please complete your meal.`,
+          `${testPrefix}5 minutes until Sehri ends. Please finish your meal.`,
+          `${testPrefix}It's 30 minutes until Iftar time. Please prepare for Iftar.`,
+          `${testPrefix}10 minutes until Iftar time. Please get ready to break your fast.`,
+          `${testPrefix}It's Iftar time! You can now break your fast.`
+        ];
+
+        for (const message of messages) {
+          this.isSpeaking = true;
+          try {
+            await TextToSpeech.speak({
+              text: message,
+              lang: ttsSettings.language,
+              rate: ttsSettings.rate,
+              pitch: ttsSettings.pitch,
+              volume: ttsSettings.volume,
+            });
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          } catch (error) {
+            console.error("Text-to-Speech error:", error);
+            try {
+              await TextToSpeech.speak({
+                text: message,
+                lang: "en-US",
+                rate: ttsSettings.rate,
+                pitch: ttsSettings.pitch,
+                volume: ttsSettings.volume,
+              });
+            } catch (fallbackError) {
+              console.error("Fallback Text-to-Speech error:", fallbackError);
+            }
+          } finally {
+            this.isSpeaking = false;
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error in test reminders:", error);
+    }
   }
 
   public clearAllReminders(): void {

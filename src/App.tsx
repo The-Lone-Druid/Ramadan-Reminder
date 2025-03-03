@@ -15,6 +15,9 @@ import {
   calendarClearOutline,
   settingsOutline,
 } from "ionicons/icons";
+import { StatusBar, Style } from "@capacitor/status-bar";
+import { App as CapacitorApp } from "@capacitor/app";
+import { useEffect } from "react";
 import Settings from "./pages/Settings";
 
 /* Core CSS required for Ionic components to work properly */
@@ -50,43 +53,69 @@ import "./theme/tabs.css";
 import Home from "./pages/Home";
 import Calendar from "./pages/Calendar";
 
-setupIonicReact();
+setupIonicReact({
+  mode: "md",
+});
 
-const App: React.FC = () => (
-  <IonApp>
-    <IonReactRouter>
-      <IonTabs>
-        <IonRouterOutlet>
-          <Route exact path="/home">
-            <Home />
-          </Route>
-          <Route exact path="/calendar">
-            <Calendar />
-          </Route>
-          <Route path="/settings">
-            <Settings />
-          </Route>
-          <Route exact path="/">
-            <Redirect to="/home" />
-          </Route>
-        </IonRouterOutlet>
-        <IonTabBar slot="bottom">
-          <IonTabButton tab="home" href="/home">
-            <IonIcon aria-hidden="true" icon={todayOutline} />
-            <IonLabel>Today</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="calendar" href="/calendar">
-            <IonIcon aria-hidden="true" icon={calendarClearOutline} />
-            <IonLabel>Calendar</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="settings" href="/settings">
-            <IonIcon aria-hidden="true" icon={settingsOutline} />
-            <IonLabel>Settings</IonLabel>
-          </IonTabButton>
-        </IonTabBar>
-      </IonTabs>
-    </IonReactRouter>
-  </IonApp>
-);
+const App: React.FC = () => {
+  useEffect(() => {
+    const setupStatusBar = async () => {
+      try {
+        const info = await CapacitorApp.getInfo();
+        // Check if not running on web
+        if (info.name !== "web") {
+          // Show status bar and set style
+          await StatusBar.show();
+          await StatusBar.setStyle({ style: Style.Dark });
+
+          // Set status bar background color and overlay
+          await StatusBar.setBackgroundColor({ color: "#1f1f1f" });
+          await StatusBar.setOverlaysWebView({ overlay: false });
+        }
+      } catch (error) {
+        console.error("Error setting up status bar:", error);
+      }
+    };
+
+    setupStatusBar();
+  }, []);
+
+  return (
+    <IonApp>
+      <IonReactRouter>
+        <IonTabs>
+          <IonRouterOutlet>
+            <Route exact path="/home">
+              <Home />
+            </Route>
+            <Route exact path="/calendar">
+              <Calendar />
+            </Route>
+            <Route path="/settings">
+              <Settings />
+            </Route>
+            <Route exact path="/">
+              <Redirect to="/home" />
+            </Route>
+          </IonRouterOutlet>
+          <IonTabBar slot="bottom">
+            <IonTabButton tab="home" href="/home">
+              <IonIcon aria-hidden="true" icon={todayOutline} />
+              <IonLabel>Today</IonLabel>
+            </IonTabButton>
+            <IonTabButton tab="calendar" href="/calendar">
+              <IonIcon aria-hidden="true" icon={calendarClearOutline} />
+              <IonLabel>Calendar</IonLabel>
+            </IonTabButton>
+            <IonTabButton tab="settings" href="/settings">
+              <IonIcon aria-hidden="true" icon={settingsOutline} />
+              <IonLabel>Settings</IonLabel>
+            </IonTabButton>
+          </IonTabBar>
+        </IonTabs>
+      </IonReactRouter>
+    </IonApp>
+  );
+};
 
 export default App;

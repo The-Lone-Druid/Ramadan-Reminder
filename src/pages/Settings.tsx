@@ -40,6 +40,10 @@ import {
 import { calculatePrayerTimes } from "../utils/prayerTimes";
 import { TTSSettings } from "../types/ramadan";
 import { reminderService } from "../utils/reminderService";
+import {
+  requestLocationPermission,
+  getCurrentLocation as getDeviceLocation,
+} from "../utils/location";
 import "./Settings.css";
 
 const Settings: React.FC = () => {
@@ -61,39 +65,56 @@ const Settings: React.FC = () => {
     setIftarNotification(notificationSettings.iftar);
   }, []);
 
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const newLat = position.coords.latitude.toString();
-          const newLng = position.coords.longitude.toString();
-          setLatitude(newLat);
-          setLongitude(newLng);
-          saveCoordinates({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-          updateNotifications({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-          presentToast({
-            message: "Location updated successfully!",
-            duration: 2000,
-            position: "bottom",
-          });
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          presentToast({
-            message:
-              "Error getting location. Please enter coordinates manually.",
-            duration: 3000,
-            position: "bottom",
-            color: "danger",
-          });
-        }
-      );
+  const getCurrentLocation = async () => {
+    try {
+      const hasPermission = await requestLocationPermission();
+      if (!hasPermission) {
+        presentToast({
+          message:
+            "Location permission is required. Please enable it in your device settings.",
+          duration: 3000,
+          position: "bottom",
+          color: "warning",
+        });
+        return;
+      }
+
+      const location = await getDeviceLocation();
+
+      if (location.error) {
+        presentToast({
+          message: location.error,
+          duration: 3000,
+          position: "bottom",
+          color: "danger",
+        });
+        return;
+      }
+
+      setLatitude(location.latitude.toString());
+      setLongitude(location.longitude.toString());
+      saveCoordinates({
+        latitude: location.latitude,
+        longitude: location.longitude,
+      });
+      updateNotifications({
+        latitude: location.latitude,
+        longitude: location.longitude,
+      });
+      presentToast({
+        message: "Location updated successfully!",
+        duration: 2000,
+        position: "bottom",
+        color: "success",
+      });
+    } catch (error) {
+      console.error("Error getting location:", error);
+      presentToast({
+        message: "Error getting location. Please try again.",
+        duration: 3000,
+        position: "bottom",
+        color: "danger",
+      });
     }
   };
 

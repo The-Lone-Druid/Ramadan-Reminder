@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">ramadan-reminder</string>
-    <string name="title_activity_main">ramadan-reminder</string>
+    <string name="app_name">Ramadan Reminder</string>
+    <string name="title_activity_main">Ramadan Reminder</string>
     <string name="package_name">io.ionic.starter</string>
     <string name="custom_url_scheme">io.ionic.starter</string>
 </resources>

@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>ramadan-reminder</string>
+        <string>Ramadan Reminder</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -45,7 +45,20 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<!-- Location permissions -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Your location is required to calculate accurate prayer times based on your current position.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Your location is required to calculate accurate prayer times based on your current position.</string>
+	<!-- Notification permissions -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<!-- Text to Speech permissions -->
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>This app needs access to speech recognition to provide voice reminders.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs access to the microphone for voice reminders.</string>
 </dict>
 </plist>
