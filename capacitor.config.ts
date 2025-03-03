@@ -1,9 +1,9 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
-  appName: 'ramadan-reminder',
-  webDir: 'dist'
+  appId: "com.ramadanreminder.app",
+  appName: "Ramadan Reminder",
+  webDir: "dist",
 };
 
 export default config;
