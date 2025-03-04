@@ -22,7 +22,7 @@ import Calendar from "./pages/Calendar";
 import { App as CapApp } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { StatusBar, Style } from "@capacitor/status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 /* Core CSS required for Ionic components to work properly */
 import "@ionic/react/css/core.css";
@@ -53,21 +53,66 @@ import "@ionic/react/css/palettes/dark.system.css";
 import "./theme/variables.css";
 import "./theme/tabs.css";
 import PrayerTimes from "./pages/PrayerTimes";
+import PermissionsModal from "./components/PermissionsModal";
+import {
+  checkPermissions,
+  PermissionStatus,
+  requestPermissions,
+} from "./utils/permissions";
+import { removeNotificationListeners } from "./utils/notifications";
 
-const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.ramadanreminder.app";
+const PLAY_STORE_URL =
+  "https://play.google.com/store/apps/details?id=com.ramadanreminder.app";
 const MARKET_URL = "market://details?id=com.ramadanreminder.app";
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 setupIonicReact();
 
 const App: React.FC = () => {
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+  const [permissions, setPermissions] = useState<PermissionStatus>({
+    location: false,
+    notifications: false,
+  });
+
+  const checkInitialPermissions = async () => {
+    const currentPermissions = await checkPermissions();
+    setPermissions(currentPermissions);
+
+    // Show modal if any permission is missing
+    if (!currentPermissions.location || !currentPermissions.notifications) {
+      setShowPermissionsModal(true);
+    }
+  };
+
+  const refresh = () => {
+    window.location.reload();
+  };
+
+  const handleRequestPermissions = async () => {
+    const newPermissions = await requestPermissions();
+    setPermissions(newPermissions);
+    console.log(newPermissions.location);
+
+    // Close modal if all permissions are granted
+    if (newPermissions.location && newPermissions.notifications) {
+      setShowPermissionsModal(false);
+      // Refresh data to get accurate prayer times with new location
+      refresh();
+    }
+  };
+
   useEffect(() => {
     setupStatusBar();
     checkForUpdate();
+    checkInitialPermissions();
 
     // Set up periodic update checks
     const updateInterval = setInterval(checkForUpdate, UPDATE_CHECK_INTERVAL);
-    return () => clearInterval(updateInterval);
+    return () => {
+      clearInterval(updateInterval);
+      removeNotificationListeners();
+    };
   }, []);
 
   const setupStatusBar = async () => {
@@ -90,16 +135,19 @@ const App: React.FC = () => {
 
   const checkForUpdate = async () => {
     try {
-      const lastUpdateCheck = localStorage.getItem('lastUpdateCheck');
+      const lastUpdateCheck = localStorage.getItem("lastUpdateCheck");
       const now = Date.now();
 
       // Only check once per day
-      if (lastUpdateCheck && now - parseInt(lastUpdateCheck) < UPDATE_CHECK_INTERVAL) {
+      if (
+        lastUpdateCheck &&
+        now - parseInt(lastUpdateCheck) < UPDATE_CHECK_INTERVAL
+      ) {
         return;
       }
 
       // Store the check time
-      localStorage.setItem('lastUpdateCheck', now.toString());
+      localStorage.setItem("lastUpdateCheck", now.toString());
 
       // Add listener for app url open (handles Play Store return)
       CapApp.addListener("appUrlOpen", (data) => {
@@ -111,7 +159,7 @@ const App: React.FC = () => {
         await Browser.open({ url: MARKET_URL });
         await Browser.close();
       } catch (error) {
-        console.log('Play Store check failed:', error);
+        console.log("Play Store check failed:", error);
         return; // Don't show update prompt if Play Store isn't accessible
       }
 
@@ -135,47 +183,55 @@ const App: React.FC = () => {
   };
 
   return (
-    <IonApp>
-      <IonReactRouter>
-        <IonTabs>
-          <IonRouterOutlet>
-            <Route exact path="/home">
-              <Home />
-            </Route>
-            <Route exact path="/calendar">
-              <Calendar />
-            </Route>
-            <Route exact path="/prayer-times">
-              <PrayerTimes />
-            </Route>
-            <Route path="/settings">
-              <Settings />
-            </Route>
-            <Route exact path="/">
-              <Redirect to="/home" />
-            </Route>
-          </IonRouterOutlet>
-          <IonTabBar slot="bottom">
-            <IonTabButton tab="home" href="/home">
-              <IonIcon icon={homeOutline} />
-              <IonLabel>Home</IonLabel>
-            </IonTabButton>
-            <IonTabButton tab="calendar" href="/calendar">
-              <IonIcon icon={calendarClearOutline} />
-              <IonLabel>Calendar</IonLabel>
-            </IonTabButton>
-            <IonTabButton tab="prayer-times" href="/prayer-times">
-              <IonIcon icon={timeOutline} />
-              <IonLabel>Prayer Times</IonLabel>
-            </IonTabButton>
-            <IonTabButton tab="settings" href="/settings">
-              <IonIcon icon={settingsOutline} />
-              <IonLabel>Settings</IonLabel>
-            </IonTabButton>
-          </IonTabBar>
-        </IonTabs>
-      </IonReactRouter>
-    </IonApp>
+    <>
+      <PermissionsModal
+        isOpen={showPermissionsModal}
+        permissions={permissions}
+        onRequestPermissions={handleRequestPermissions}
+        onClose={() => setShowPermissionsModal(false)}
+      />
+      <IonApp>
+        <IonReactRouter>
+          <IonTabs>
+            <IonRouterOutlet>
+              <Route exact path="/home">
+                <Home />
+              </Route>
+              <Route exact path="/calendar">
+                <Calendar />
+              </Route>
+              <Route exact path="/prayer-times">
+                <PrayerTimes />
+              </Route>
+              <Route path="/settings">
+                <Settings />
+              </Route>
+              <Route exact path="/">
+                <Redirect to="/home" />
+              </Route>
+            </IonRouterOutlet>
+            <IonTabBar slot="bottom">
+              <IonTabButton tab="home" href="/home">
+                <IonIcon icon={homeOutline} />
+                <IonLabel>Home</IonLabel>
+              </IonTabButton>
+              <IonTabButton tab="calendar" href="/calendar">
+                <IonIcon icon={calendarClearOutline} />
+                <IonLabel>Calendar</IonLabel>
+              </IonTabButton>
+              <IonTabButton tab="prayer-times" href="/prayer-times">
+                <IonIcon icon={timeOutline} />
+                <IonLabel>Prayer Times</IonLabel>
+              </IonTabButton>
+              <IonTabButton tab="settings" href="/settings">
+                <IonIcon icon={settingsOutline} />
+                <IonLabel>Settings</IonLabel>
+              </IonTabButton>
+            </IonTabBar>
+          </IonTabs>
+        </IonReactRouter>
+      </IonApp>
+    </>
   );
 };
 

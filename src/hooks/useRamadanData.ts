@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback } from "react";
 import { getRamadanData } from "../utils/api";
 import { RamadanData } from "../types/ramadan";
 import { getCurrentRamadanDates } from "../utils/dates";
@@ -14,7 +14,10 @@ import {
   setupNotifications,
   scheduleRamadanNotifications,
 } from "../utils/notifications";
+import { Store } from "@tanstack/store";
+import { useStore } from "@tanstack/react-store";
 
+const CACHE_EXPIRY = 60 * 60 * 1000; // 1 hour in ms
 const getCacheKey = (year: number) => `ramadan_data_cache_${year}`;
 
 interface CacheData {
@@ -23,212 +26,213 @@ interface CacheData {
   year: number;
 }
 
+interface IRamadanDataStore {
+  data: RamadanData | null;
+  loading: boolean;
+  error: string | null;
+  locationLoading: boolean;
+  lastUpdate: number;
+  isNotificationSetup: boolean;
+}
+
+const initialState: IRamadanDataStore = {
+  data: null,
+  loading: true,
+  error: null,
+  locationLoading: false,
+  lastUpdate: 0,
+  isNotificationSetup: false,
+};
+
+const RamadanDataStore = new Store<IRamadanDataStore>(initialState);
+
+const parseCachedData = (cachedData: RamadanData): RamadanData => ({
+  ...cachedData,
+  prayerTimes: cachedData.prayerTimes.map((day) => ({
+    ...day,
+    date: new Date(day.date),
+    sehri: new Date(day.sehri),
+    iftar: new Date(day.iftar),
+    fajr: new Date(day.fajr),
+    sunrise: new Date(day.sunrise),
+    dhuhr: new Date(day.dhuhr),
+    asr: new Date(day.asr),
+    sunset: new Date(day.sunset),
+    maghrib: new Date(day.maghrib),
+    isha: new Date(day.isha),
+  })),
+});
+
 export const useRamadanData = () => {
-  const [data, setData] = useState<RamadanData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [locationLoading, setLocationLoading] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState<number>(0);
-  const notificationsSetupRef = useRef(false);
+  const {
+    data,
+    loading,
+    error,
+    locationLoading,
+    lastUpdate,
+    isNotificationSetup,
+  } = useStore(RamadanDataStore);
 
   const setupNotificationsForData = async (ramadanData: RamadanData) => {
-    try {
-      // If notifications have already been set up, skip
-      if (notificationsSetupRef.current) {
-        return;
-      }
+    if (isNotificationSetup) return;
 
-      // Check notification permissions
+    try {
       const permResult = await LocalNotifications.checkPermissions();
       if (permResult.display !== "granted") {
         const requestResult = await LocalNotifications.requestPermissions();
-        if (requestResult.display !== "granted") {
-          console.log("Notification permissions not granted");
-          return;
-        }
+        if (requestResult.display !== "granted") return;
       }
 
-      // Setup notifications
-      const setupSuccess = await setupNotifications();
-      if (!setupSuccess) {
-        console.error("Failed to setup notifications");
-        return;
+      if (!(await setupNotifications())) {
+        throw new Error("Failed to setup notifications");
       }
 
-      // Schedule notifications for each day
-      const schedules = ramadanData.prayerTimes.map((day) => ({
-        sehriTime: day.sehri,
-        iftarTime: day.iftar,
-        dayNumber: day.dayNumber,
-      }));
+      const schedules = ramadanData.prayerTimes.map(
+        ({ sehri, iftar, dayNumber }) => ({
+          sehriTime: sehri,
+          iftarTime: iftar,
+          dayNumber,
+        })
+      );
 
       await scheduleRamadanNotifications(schedules);
-      notificationsSetupRef.current = true;
+      RamadanDataStore.setState((prev) => ({
+        ...prev,
+        isNotificationSetup: true,
+      }));
     } catch (error) {
-      console.error("Error setting up notifications:", error);
+      console.error("Notification setup error:", error);
     }
   };
 
+  const getCachedData = async (year: number): Promise<RamadanData | null> => {
+    try {
+      const cached = localStorage.getItem(getCacheKey(year));
+      if (!cached) return null;
+
+      const { data, timestamp } = JSON.parse(cached) as CacheData;
+      if (Date.now() - timestamp > CACHE_EXPIRY) return null;
+
+      return parseCachedData(data);
+    } catch (error) {
+      console.error("Cache read error:", error);
+      return null;
+    }
+  };
+
+  const getFreshData = async (): Promise<RamadanData> => {
+    RamadanDataStore.setState((prev) => ({ ...prev, locationLoading: true }));
+
+    try {
+      const coordinates = await getCurrentLocation();
+      if (!coordinates) {
+        throw new Error("Location services required");
+      }
+
+      await saveCoordinates(coordinates);
+      return await getRamadanData(coordinates);
+    } catch (error) {
+      console.log("Error getting fresh data:", error);
+      const cachedCoordinates = getCoordinates();
+      if (!cachedCoordinates) {
+        throw new Error("Location permission required");
+      }
+      return await getRamadanData(cachedCoordinates);
+    } finally {
+      RamadanDataStore.setState((prev) => ({
+        ...prev,
+        locationLoading: false,
+      }));
+    }
+  };
+
+  const updateCache = async (data: RamadanData, year: number) => {
+    const cacheData: CacheData = {
+      data,
+      timestamp: Date.now(),
+      year,
+    };
+    localStorage.setItem(getCacheKey(year), JSON.stringify(cacheData));
+  };
+
   const loadData = useCallback(
-    async (forceRefresh: boolean = false) => {
+    async (forceRefresh = false) => {
+      const now = Date.now();
+
+      // Check if we can use existing data
+      if (!forceRefresh && data && now - lastUpdate < CACHE_EXPIRY) {
+        return;
+      }
+
       try {
-        // Check if we have recent cached data and not forcing refresh
-        if (!forceRefresh && data) {
-          const now = Date.now();
-          // Only refresh if last update was more than 1 hour ago
-          if (now - lastUpdate < 60 * 60 * 1000) {
-            return;
-          }
-        }
+        RamadanDataStore.setState((prev) => ({
+          ...prev,
+          loading: true,
+          error: null,
+        }));
 
-        setLoading(true);
-        setError(null);
-
-        // Try to get data from cache first
+        // Try cache first
         const ramadanDates = getCurrentRamadanDates();
-        const cacheKey = getCacheKey(ramadanDates.YEAR);
-        const cachedData = localStorage.getItem(cacheKey);
+        const cachedData = await getCachedData(ramadanDates.YEAR);
 
         if (cachedData && !forceRefresh) {
-          try {
-            const { data: cachedRamadanData, timestamp } = JSON.parse(
-              cachedData
-            ) as CacheData;
-            const isExpired = Date.now() - timestamp > 60 * 60 * 1000; // 1 hour expiry
-
-            if (!isExpired) {
-              const parsedData: RamadanData = {
-                ...cachedRamadanData,
-                prayerTimes: cachedRamadanData.prayerTimes.map((day) => ({
-                  ...day,
-                  date: new Date(day.date),
-                  sehri: new Date(day.sehri),
-                  iftar: new Date(day.iftar),
-                  fajr: new Date(day.fajr),
-                  sunrise: new Date(day.sunrise),
-                  dhuhr: new Date(day.dhuhr),
-                  asr: new Date(day.asr),
-                  sunset: new Date(day.sunset),
-                  maghrib: new Date(day.maghrib),
-                  isha: new Date(day.isha),
-                })),
-              };
-              setData(parsedData);
-              setLastUpdate(timestamp);
-              setLoading(false);
-
-              // Setup notifications with cached data if not already set up
-              if (!notificationsSetupRef.current) {
-                await setupNotificationsForData(parsedData);
-              }
-              return;
-            }
-          } catch (error) {
-            console.error("Error parsing cached data:", error);
-          }
+          RamadanDataStore.setState((prev) => ({
+            ...prev,
+            data: cachedData,
+            lastUpdate: now,
+            loading: false,
+          }));
+          await setupNotificationsForData(cachedData);
+          return;
         }
 
-        // If no valid cache, get fresh data
-        setLocationLoading(true);
-        try {
-          const coordinates = await getCurrentLocation();
-          if (!coordinates) {
-            throw new Error(
-              "Unable to get location. Please enable location services and try again."
-            );
-          }
+        // Get fresh data
+        const freshData = await getFreshData();
+        RamadanDataStore.setState((prev) => ({
+          ...prev,
+          data: freshData,
+          lastUpdate: now,
+        }));
 
-          // Save coordinates when successfully obtained
-          saveCoordinates(coordinates);
-
-          // Fetch new data with coordinates
-          const newData = await getRamadanData(coordinates);
-          setData(newData);
-          setLastUpdate(Date.now());
-
-          // Set up notifications with the new data if not already set up
-          if (!notificationsSetupRef.current) {
-            await setupNotificationsForData(newData);
-          }
-
-          // Update cache
-          const cacheData: CacheData = {
-            data: newData,
-            timestamp: Date.now(),
-            year: ramadanDates.YEAR,
-          };
-          localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-        } catch (error) {
-          console.error("Location error:", error);
-          // If getting current location fails, try to use cached coordinates
-          const cachedCoordinates = getCoordinates();
-          if (!cachedCoordinates) {
-            setError(
-              "Location permission required. Please enable location services in Settings."
-            );
-            return;
-          }
-
-          // Use cached coordinates to fetch data
-          const newData = await getRamadanData(cachedCoordinates);
-          setData(newData);
-          setLastUpdate(Date.now());
-
-          // Set up notifications with cached coordinates data if not already set up
-          if (!notificationsSetupRef.current) {
-            await setupNotificationsForData(newData);
-          }
-        } finally {
-          setLocationLoading(false);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load data");
+        await updateCache(freshData, ramadanDates.YEAR);
+        await setupNotificationsForData(freshData);
+      } catch (error) {
+        RamadanDataStore.setState((prev) => ({
+          ...prev,
+          error: error instanceof Error ? error.message : "Failed to load data",
+        }));
       } finally {
-        setLoading(false);
+        RamadanDataStore.setState((prev) => ({ ...prev, loading: false }));
       }
     },
-    [data, lastUpdate]
+    [data, lastUpdate, setupNotificationsForData]
   );
 
   // Initial load
   useEffect(() => {
     loadData();
-  }, []); // Remove loadData from dependencies to prevent unnecessary reloads
+  }, []); // Dependency removed to prevent unnecessary reloads
 
-  // Handle app resume - only refresh if it's been more than an hour
+  // App resume handler
   useEffect(() => {
     let cleanup: (() => void) | undefined;
 
-    const setupListener = async () => {
+    const setupAppStateListener = async () => {
       const listener = await App.addListener(
         "appStateChange",
-        ({ isActive }) => {
-          if (isActive) {
-            loadData();
-          }
-        }
+        ({ isActive }) => isActive && loadData()
       );
       cleanup = () => listener.remove();
     };
 
-    setupListener();
-
-    return () => {
-      if (cleanup) {
-        cleanup();
-      }
-    };
+    setupAppStateListener();
+    return () => cleanup?.();
   }, [loadData]);
 
-  // Subscribe to location changes
+  // Location change handler
   useEffect(() => {
-    const unsubscribe = locationEvents.subscribe(() => {
-      loadData(true); // Force refresh when location changes
-    });
-
-    return () => {
-      unsubscribe();
-    };
+    const unsubscribe = locationEvents.subscribe(() => loadData(true));
+    return () => unsubscribe();
   }, [loadData]);
 
   return {

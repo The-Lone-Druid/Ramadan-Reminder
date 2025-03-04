@@ -4,7 +4,6 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonList,
   IonItem,
   IonLabel,
   IonToggle,
@@ -27,7 +26,6 @@ import {
   informationCircleOutline,
 } from "ionicons/icons";
 import { useEffect, useState } from "react";
-import { Coordinates } from "adhan";
 import {
   saveCoordinates,
   getCoordinates,
@@ -42,6 +40,7 @@ import {
   setupNotifications,
   scheduleRamadanNotifications,
   NotificationSchedule,
+  showFullTestNotifications,
 } from "../utils/notifications";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { calculatePrayerTimes } from "../utils/prayerTimes";
@@ -165,41 +164,6 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleCoordinateChange = () => {
-    if (!latitude || !longitude) {
-      presentToast({
-        message: "Please enter both latitude and longitude",
-        duration: 3000,
-        position: "bottom",
-        color: "danger",
-      });
-      return;
-    }
-
-    const lat = parseFloat(latitude);
-    const lng = parseFloat(longitude);
-
-    if (isNaN(lat) || isNaN(lng)) {
-      presentToast({
-        message: "Please enter valid coordinates",
-        duration: 3000,
-        position: "bottom",
-        color: "danger",
-      });
-      return;
-    }
-
-    const coordinates: Coordinates = { latitude: lat, longitude: lng };
-    saveCoordinates(coordinates);
-    updateNotifications(lat, lng);
-    presentToast({
-      message: "Settings saved successfully!",
-      duration: 2000,
-      position: "bottom",
-      color: "success",
-    });
-  };
-
   const updateNotifications = async (latitude: number, longitude: number) => {
     if (sehriNotification || iftarNotification) {
       // First check permissions
@@ -315,60 +279,36 @@ const Settings: React.FC = () => {
     reminderService.testReminders();
   };
 
-  const testNotifications = async () => {
-    // First check and request permissions if needed
-    const permResult = await LocalNotifications.checkPermissions();
-    if (permResult.display !== "granted") {
-      const requestResult = await LocalNotifications.requestPermissions();
-      if (requestResult.display !== "granted") {
-        presentToast({
-          message: "Notifications permission is required for testing.",
-          duration: 3000,
-          position: "bottom",
-          color: "warning",
-        });
-        return;
-      }
-    }
-
-    // Create a test schedule for immediate notification
-    const testSchedule: NotificationSchedule = {
-      sehriTime: new Date(Date.now() + 10000), // 10 seconds from now
-      iftarTime: new Date(Date.now() + 20000), // 20 seconds from now
-      dayNumber: 1,
-    };
-
-    const setupSuccess = await setupNotifications();
-    if (!setupSuccess) {
+  const handleTestNotifications = async () => {
+    try {
+      await showFullTestNotifications();
+      // Show success message to user
       presentToast({
-        message: "Failed to setup notifications",
+        message: "Test notifications will appear in a few seconds!",
         duration: 3000,
-        position: "bottom",
+        color: "success",
+      });
+    } catch (error) {
+      console.log(error);
+      // Show error message to user
+      presentToast({
+        message: "Failed to send test notifications. Please check permissions.",
+        duration: 3000,
         color: "danger",
       });
-      return;
     }
-
-    await scheduleRamadanNotifications([testSchedule]);
-
-    presentToast({
-      message: "Test notifications scheduled! Check in 10-20 seconds.",
-      duration: 2000,
-      position: "bottom",
-      color: "success",
-    });
   };
 
   const handleDateAdjustmentChange = (checked: boolean) => {
     const newConfig = {
       enabled: checked,
       daysToAdd: checked ? 1 : 0,
-      reason: checked ? 'Adjusted for Indian moon sighting practice' : '',
+      reason: checked ? "Adjusted for Indian moon sighting practice" : "",
     };
-    
+
     setDateAdjustment(newConfig);
     saveDateAdjustment(newConfig);
-    
+
     // Refresh data after changing date adjustment
     window.location.reload();
   };
@@ -387,135 +327,182 @@ const Settings: React.FC = () => {
           </IonToolbar>
         </IonHeader>
 
-        <IonList className="ion-padding">
-          <IonItem>
-            <IonIcon icon={locationOutline} slot="start" />
-            <IonLabel position="stacked">Latitude</IonLabel>
-            <IonInput
-              type="number"
-              value={latitude}
-              onIonChange={(e) => setLatitude(e.detail.value!)}
-              onIonBlur={handleCoordinateChange}
-            />
-          </IonItem>
-
-          <IonItem>
-            <IonIcon icon={locationOutline} slot="start" />
-            <IonLabel position="stacked">Longitude</IonLabel>
-            <IonInput
-              type="number"
-              value={longitude}
-              onIonChange={(e) => setLongitude(e.detail.value!)}
-              onIonBlur={handleCoordinateChange}
-            />
-          </IonItem>
-
-          <IonButton
-            expand="block"
-            onClick={getCurrentLocation}
-            className="ion-margin"
-          >
-            Get Current Location
-          </IonButton>
-
-          <IonItem>
-            <IonIcon icon={notificationsOutline} slot="start" />
-            <IonLabel>Sehri Notification</IonLabel>
-            <IonToggle
-              checked={sehriNotification}
-              onIonChange={(e) =>
-                handleNotificationChange("sehri", e.detail.checked)
-              }
-            />
-          </IonItem>
-
-          <IonItem>
-            <IonIcon icon={notificationsOutline} slot="start" />
-            <IonLabel>Iftar Notification</IonLabel>
-            <IonToggle
-              checked={iftarNotification}
-              onIonChange={(e) =>
-                handleNotificationChange("iftar", e.detail.checked)
-              }
-            />
-          </IonItem>
-
-          <IonItem>
-            <IonLabel>Voice Settings</IonLabel>
-          </IonItem>
-          <IonItem>
-            <IonLabel>Enable Voice Reminders</IonLabel>
-            <IonToggle
-              checked={ttsSettings.enabled}
-              onIonChange={(e) => handleTTSChange("enabled", e.detail.checked)}
-            />
-          </IonItem>
-          <IonItem>
-            <IonLabel>Voice Language</IonLabel>
-            <IonSelect
-              value={ttsSettings.language}
-              onIonChange={(e) => handleTTSChange("language", e.detail.value)}
-            >
-              <IonSelectOption value="en-IN">Indian English</IonSelectOption>
-              <IonSelectOption value="en-US">US English</IonSelectOption>
-            </IonSelect>
-          </IonItem>
-          <IonItem>
-            <IonLabel>Voice Volume</IonLabel>
-            <IonRange
-              value={ttsSettings.volume}
-              min={0}
-              max={1}
-              step={0.1}
-              onIonChange={(e) => handleTTSChange("volume", e.detail.value)}
-            />
-          </IonItem>
-          <IonItem>
-            <IonLabel>Speech Rate</IonLabel>
-            <IonRange
-              value={ttsSettings.rate}
-              min={0.5}
-              max={2}
-              step={0.1}
-              onIonChange={(e) => handleTTSChange("rate", e.detail.value)}
-            />
-          </IonItem>
-          <IonItem>
-            <IonLabel>Speech Pitch</IonLabel>
-            <IonRange
-              value={ttsSettings.pitch}
-              min={0.5}
-              max={2}
-              step={0.1}
-              onIonChange={(e) => handleTTSChange("pitch", e.detail.value)}
-            />
-          </IonItem>
-
+        <div className="ion-padding">
+          {/* Location Settings Card */}
           <IonCard>
             <IonCardHeader>
-              <IonCardTitle>Date Adjustment</IonCardTitle>
+              <IonCardTitle>
+                <IonIcon icon={locationOutline} /> Location Settings
+              </IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent>
+              <IonItem>
+                <IonLabel position="stacked">Latitude</IonLabel>
+                <IonInput
+                  type="number"
+                  value={latitude}
+                  onIonChange={(e) => setLatitude(e.detail.value!)}
+                />
+              </IonItem>
+
+              <IonItem>
+                <IonLabel position="stacked">Longitude</IonLabel>
+                <IonInput
+                  type="number"
+                  value={longitude}
+                  onIonChange={(e) => setLongitude(e.detail.value!)}
+                />
+              </IonItem>
+
+              <IonButton
+                expand="block"
+                onClick={getCurrentLocation}
+                className="ion-margin-top"
+              >
+                <IonIcon icon={locationOutline} slot="start" />
+                Get Current Location
+              </IonButton>
+            </IonCardContent>
+          </IonCard>
+
+          {/* Notification Settings Card */}
+          <IonCard>
+            <IonCardHeader>
+              <IonCardTitle>
+                <IonIcon icon={notificationsOutline} /> Notification Settings
+              </IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent>
+              <IonItem>
+                <IonLabel>Sehri Notification</IonLabel>
+                <IonToggle
+                  checked={sehriNotification}
+                  onIonChange={(e) =>
+                    handleNotificationChange("sehri", e.detail.checked)
+                  }
+                />
+              </IonItem>
+
+              <IonItem>
+                <IonLabel>Iftar Notification</IonLabel>
+                <IonToggle
+                  checked={iftarNotification}
+                  onIonChange={(e) =>
+                    handleNotificationChange("iftar", e.detail.checked)
+                  }
+                />
+              </IonItem>
+            </IonCardContent>
+          </IonCard>
+
+          {/* Voice Settings Card */}
+          <IonCard>
+            <IonCardHeader>
+              <IonCardTitle>
+                <IonIcon icon={playCircleOutline} /> Voice Settings
+              </IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent>
+              <IonItem>
+                <IonLabel>Enable Voice Reminders</IonLabel>
+                <IonToggle
+                  checked={ttsSettings.enabled}
+                  onIonChange={(e) =>
+                    handleTTSChange("enabled", e.detail.checked)
+                  }
+                />
+              </IonItem>
+
+              <IonItem>
+                <IonLabel>Voice Language</IonLabel>
+                <IonSelect
+                  value={ttsSettings.language}
+                  onIonChange={(e) =>
+                    handleTTSChange("language", e.detail.value)
+                  }
+                >
+                  <IonSelectOption value="en-IN">
+                    Indian English
+                  </IonSelectOption>
+                  <IonSelectOption value="en-US">US English</IonSelectOption>
+                </IonSelect>
+              </IonItem>
+
+              <IonItem>
+                <IonLabel>Voice Volume</IonLabel>
+                <IonRange
+                  value={ttsSettings.volume}
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  onIonChange={(e) => handleTTSChange("volume", e.detail.value)}
+                />
+              </IonItem>
+
+              <IonItem>
+                <IonLabel>Speech Rate</IonLabel>
+                <IonRange
+                  value={ttsSettings.rate}
+                  min={0.5}
+                  max={2}
+                  step={0.1}
+                  onIonChange={(e) => handleTTSChange("rate", e.detail.value)}
+                />
+              </IonItem>
+
+              <IonItem>
+                <IonLabel>Speech Pitch</IonLabel>
+                <IonRange
+                  value={ttsSettings.pitch}
+                  min={0.5}
+                  max={2}
+                  step={0.1}
+                  onIonChange={(e) => handleTTSChange("pitch", e.detail.value)}
+                />
+              </IonItem>
+            </IonCardContent>
+          </IonCard>
+
+          {/* Date Adjustment Card */}
+          <IonCard>
+            <IonCardHeader>
+              <IonCardTitle>
+                <IonIcon icon={informationCircleOutline} /> Date Adjustment
+              </IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
               <IonItem>
                 <IonLabel>Adjust dates for Indian moon sighting</IonLabel>
                 <IonToggle
                   checked={dateAdjustment.enabled}
-                  onIonChange={e => handleDateAdjustmentChange(e.detail.checked)}
+                  onIonChange={(e) =>
+                    handleDateAdjustmentChange(e.detail.checked)
+                  }
                 />
               </IonItem>
               {dateAdjustment.enabled && (
-                <p className="ion-padding-start ion-padding-top">
-                  <IonIcon icon={informationCircleOutline} /> 
-                  Ramadan dates will be adjusted by adding one day to account for Indian moon sighting practices.
-                </p>
+                <div className="ion-padding-top">
+                  <p className="settings-info">
+                    <IonIcon icon={informationCircleOutline} />
+                    Ramadan dates will be adjusted by adding one day to account
+                    for Indian moon sighting practices.
+                  </p>
+                </div>
               )}
             </IonCardContent>
           </IonCard>
 
-          <IonCard className="ion-margin-top">
+          {/* Test Settings Card */}
+          <IonCard>
+            <IonCardHeader>
+              <IonCardTitle>
+                <IonIcon icon={playCircleOutline} /> Test Settings
+              </IonCardTitle>
+            </IonCardHeader>
             <IonCardContent>
-              <h2>Test Settings</h2>
-              <p>Test your notification and voice settings</p>
+              <p className="settings-description">
+                Test your notification and voice settings
+              </p>
 
               <IonButton
                 expand="block"
@@ -528,7 +515,7 @@ const Settings: React.FC = () => {
 
               <IonButton
                 expand="block"
-                onClick={testNotifications}
+                onClick={handleTestNotifications}
                 className="ion-margin-vertical"
               >
                 <IonIcon icon={notificationsOutline} slot="start" />
@@ -536,7 +523,7 @@ const Settings: React.FC = () => {
               </IonButton>
             </IonCardContent>
           </IonCard>
-        </IonList>
+        </div>
       </IonContent>
     </IonPage>
   );

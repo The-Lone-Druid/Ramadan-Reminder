@@ -22,7 +22,6 @@ import { useEffect, useState } from "react";
 import { calculatePrayerTimes, TimingType } from "../utils/prayerTimes";
 import { getCoordinates } from "../utils/storage";
 import { getRamadanDates } from "../utils/dates";
-import { reminderService } from "../utils/reminderService";
 import "./Calendar.css";
 
 interface DayTiming extends TimingType {
@@ -43,7 +42,9 @@ const Calendar: React.FC = () => {
     const ramadanDates = getRamadanDates();
 
     if (!coordinates) {
-      setError("Location not set. Please set your location in Settings to view prayer times.");
+      setError(
+        "Location not set. Please set your location in Settings to view prayer times."
+      );
       setIsLoading(false);
       return;
     }
@@ -60,23 +61,10 @@ const Calendar: React.FC = () => {
 
     setTimings(days);
     setIsLoading(false);
-
-    // Schedule reminders for today's timings
-    const todayTiming = days.find((day) => day.isToday);
-    if (todayTiming) {
-      reminderService.scheduleDayReminders(
-        todayTiming.sehri,
-        todayTiming.iftar
-      );
-    }
   };
 
   useEffect(() => {
     calculateMonthTimings();
-    return () => {
-      reminderService.clearAllReminders();
-      reminderService.stopSpeaking();
-    };
   }, []);
 
   const handleRefresh = (event: CustomEvent) => {

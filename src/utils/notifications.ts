@@ -133,4 +133,50 @@ export const addNotificationListeners = (
 
 export const removeNotificationListeners = () => {
   LocalNotifications.removeAllListeners();
+};
+
+export const showFullTestNotifications = async () => {
+  try {
+    // First check permissions
+    const permResult = await LocalNotifications.checkPermissions();
+    if (permResult.display !== "granted") {
+      const requestResult = await LocalNotifications.requestPermissions();
+      if (requestResult.display !== "granted") {
+        throw new Error("Notification permissions not granted");
+      }
+    }
+
+    // Schedule test notifications with small delays
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          title: "Sehri Time",
+          body: "Time to wake up for Sehri! This is a test notification.",
+          id: Date.now(),
+          schedule: { at: new Date(Date.now() + 3000) }, // 3 seconds delay
+          sound: "beep.wav",
+          actionTypeId: "SEHRI",
+          extra: {
+            type: "TEST_SEHRI",
+          },
+        },
+        {
+          title: "Iftar Time",
+          body: "Time for Iftar! This is a test notification.",
+          id: Date.now() + 1,
+          schedule: { at: new Date(Date.now() + 6000) }, // 6 seconds delay
+          sound: "beep.wav",
+          actionTypeId: "IFTAR",
+          extra: {
+            type: "TEST_IFTAR",
+          },
+        },
+      ],
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error showing test notifications:", error);
+    throw error;
+  }
 }; 

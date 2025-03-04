@@ -1,7 +1,7 @@
 import { Coordinates } from "adhan";
-import { TTSSettings } from '../types/ramadan';
-import { locationEvents } from './events';
-import { Geolocation } from '@capacitor/geolocation';
+import { TTSSettings } from "../types/ramadan";
+import { locationEvents } from "./events";
+import { Geolocation } from "@capacitor/geolocation";
 
 export interface DateAdjustmentConfig {
   enabled: boolean;
@@ -13,8 +13,8 @@ const STORAGE_KEYS = {
   COORDINATES: "ramadan-coordinates",
   NOTIFICATIONS: "ramadan-notifications",
   MANUAL_TIMES: "ramadan-manual-times",
-  TTS_SETTINGS: 'tts_settings',
-  DATE_ADJUSTMENT: 'date-adjustment',
+  TTS_SETTINGS: "tts_settings",
+  DATE_ADJUSTMENT: "date-adjustment",
 };
 
 interface NotificationSettings {
@@ -31,7 +31,7 @@ export interface ManualTimeEntry {
 const DEFAULT_TTS_SETTINGS: TTSSettings = {
   enabled: true,
   volume: 1.0,
-  language: 'en-IN',
+  language: "en-IN",
   rate: 1.0,
   pitch: 1.0,
 };
@@ -40,7 +40,12 @@ const DEFAULT_TTS_SETTINGS: TTSSettings = {
 export const isLocationInIndia = (coordinates: Coordinates | null): boolean => {
   if (!coordinates) return false;
   const { latitude, longitude } = coordinates;
-  return latitude >= 8.4 && latitude <= 37.6 && longitude >= 68.7 && longitude <= 97.25;
+  return (
+    latitude >= 8.4 &&
+    latitude <= 37.6 &&
+    longitude >= 68.7 &&
+    longitude <= 97.25
+  );
 };
 
 export const getDateAdjustment = (): DateAdjustmentConfig => {
@@ -49,28 +54,28 @@ export const getDateAdjustment = (): DateAdjustmentConfig => {
     if (stored) {
       return JSON.parse(stored);
     }
-    
+
     // Auto-configure based on location
     const coordinates = getCoordinates();
     if (isLocationInIndia(coordinates)) {
       return {
         enabled: true,
         daysToAdd: 1,
-        reason: 'Adjusted for Indian moon sighting practice',
+        reason: "Adjusted for Indian moon sighting practice",
       };
     }
-    
+
     return {
       enabled: false,
       daysToAdd: 0,
-      reason: '',
+      reason: "",
     };
   } catch (error) {
     console.error("Error getting date adjustment:", error);
     return {
       enabled: false,
       daysToAdd: 0,
-      reason: '',
+      reason: "",
     };
   }
 };
@@ -96,7 +101,7 @@ export const saveCoordinates = (coordinates: Coordinates): void => {
 export const getCoordinates = (): Coordinates | null => {
   const stored = localStorage.getItem(STORAGE_KEYS.COORDINATES);
   if (!stored) return null;
-  
+
   try {
     return JSON.parse(stored) as Coordinates;
   } catch {
@@ -170,7 +175,7 @@ export const getTTSSettings = (): TTSSettings => {
     if (!stored) return DEFAULT_TTS_SETTINGS;
     return JSON.parse(stored);
   } catch (error) {
-    console.error('Error getting TTS settings:', error);
+    console.error("Error getting TTS settings:", error);
     return DEFAULT_TTS_SETTINGS;
   }
 };
@@ -179,7 +184,7 @@ export const saveTTSSettings = (settings: TTSSettings): void => {
   try {
     localStorage.setItem(STORAGE_KEYS.TTS_SETTINGS, JSON.stringify(settings));
   } catch (error) {
-    console.error('Error saving TTS settings:', error);
+    console.error("Error saving TTS settings:", error);
   }
 };
 
@@ -191,20 +196,19 @@ export const getCurrentLocation = async (): Promise<Coordinates> => {
   try {
     const position = await Geolocation.getCurrentPosition({
       enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
     });
 
     const coordinates: Coordinates = {
       latitude: position.coords.latitude,
       longitude: position.coords.longitude,
     };
-    
+
     setCoordinates(coordinates);
     return coordinates;
   } catch (error: unknown) {
-    console.error('Geolocation error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error("Geolocation error:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
     throw new Error(`Failed to get location: ${errorMessage}`);
   }
 };

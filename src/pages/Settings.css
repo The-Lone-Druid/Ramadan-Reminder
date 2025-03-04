@@ -63,4 +63,66 @@ ion-card-content p {
   margin: 0 0 1rem 0;
   font-size: 0.9rem;
   color: var(--ion-color-medium);
+}
+
+.settings-description {
+  color: var(--ion-color-medium);
+  margin: 0 0 16px;
+  font-size: 14px;
+}
+
+.settings-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ion-color-medium);
+  font-size: 14px;
+  margin: 0;
+}
+
+ion-card {
+  margin: 16px 0;
+}
+
+ion-card-header {
+  padding-bottom: 8px;
+}
+
+ion-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+}
+
+ion-card-content ion-item:last-child {
+  --border-width: 0;
+}
+
+ion-range {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.ion-padding {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+ion-icon {
+  color: var(--ion-color-primary);
+}
+
+ion-button {
+  margin: 8px 0;
+}
+
+@media (max-width: 576px) {
+  ion-card {
+    margin: 12px 0;
+  }
+
+  ion-card-title {
+    font-size: 16px;
+  }
 } 

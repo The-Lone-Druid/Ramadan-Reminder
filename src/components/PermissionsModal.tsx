@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   IonModal,
   IonHeader,
@@ -11,14 +11,14 @@ import {
   IonItem,
   IonLabel,
   IonNote,
-} from '@ionic/react';
+} from "@ionic/react";
 import {
   locationOutline,
   notificationsOutline,
   checkmarkCircleOutline,
   closeCircleOutline,
-} from 'ionicons/icons';
-import { PermissionStatus } from '../utils/permissions';
+} from "ionicons/icons";
+import { PermissionStatus } from "../utils/permissions";
 
 interface PermissionsModalProps {
   isOpen: boolean;
@@ -44,8 +44,8 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
         <div className="ion-padding">
           <h2>Welcome to Ramadan Reminder!</h2>
           <p>
-            To provide you with accurate prayer times and reminders, we need the following
-            permissions:
+            To provide you with accurate prayer times and reminders, we need the
+            following permissions:
           </p>
 
           <IonList>
@@ -56,8 +56,12 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
                 <p>Required for accurate prayer times based on your location</p>
               </IonLabel>
               <IonIcon
-                color={permissions.location ? 'success' : 'danger'}
-                icon={permissions.location ? checkmarkCircleOutline : closeCircleOutline}
+                color={permissions.location ? "success" : "danger"}
+                icon={
+                  permissions.location
+                    ? checkmarkCircleOutline
+                    : closeCircleOutline
+                }
                 slot="end"
               />
             </IonItem>
@@ -69,8 +73,12 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
                 <p>Required for Sehri and Iftar reminders</p>
               </IonLabel>
               <IonIcon
-                color={permissions.notifications ? 'success' : 'danger'}
-                icon={permissions.notifications ? checkmarkCircleOutline : closeCircleOutline}
+                color={permissions.notifications ? "success" : "danger"}
+                icon={
+                  permissions.notifications
+                    ? checkmarkCircleOutline
+                    : closeCircleOutline
+                }
                 slot="end"
               />
             </IonItem>
@@ -78,13 +86,13 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
 
           {(!permissions.location || !permissions.notifications) && (
             <IonNote color="danger" className="ion-padding">
-              Some permissions are not granted. The app may not work correctly without these
-              permissions.
+              Some permissions are not granted. The app may not work correctly
+              without these permissions.
             </IonNote>
           )}
 
           <div className="ion-padding">
-            {(!permissions.location || !permissions.notifications) ? (
+            {!permissions.location || !permissions.notifications ? (
               <IonButton expand="block" onClick={onRequestPermissions}>
                 Grant Permissions
               </IonButton>
@@ -100,4 +108,4 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
   );
 };
 
-export default PermissionsModal; 
+export default PermissionsModal;

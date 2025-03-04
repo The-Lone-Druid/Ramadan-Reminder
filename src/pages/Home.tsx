@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React from "react";
 import {
   IonContent,
   IonHeader,
@@ -12,26 +12,11 @@ import {
   IonCardContent,
   IonCardHeader,
   IonCardTitle,
-  IonButton,
   IonIcon,
-  useIonToast,
 } from "@ionic/react";
 import { useRamadanData } from "../hooks/useRamadanData";
 import { isRamadan, getCurrentRamadanDates } from "../utils/dates";
 import { format } from "date-fns";
-import {
-  checkPermissions,
-  requestPermissions,
-  PermissionStatus,
-} from "../utils/permissions";
-import {
-  setupNotifications,
-  scheduleRamadanNotifications,
-  addNotificationListeners,
-  removeNotificationListeners,
-  NotificationSchedule,
-} from "../utils/notifications";
-import PermissionsModal from "../components/PermissionsModal";
 import Skeleton from "../components/Skeleton";
 import {
   calendarOutline,
@@ -46,103 +31,6 @@ const Home: React.FC = () => {
   const { data, loading, error, refresh } = useRamadanData();
   const isRamadanActive = isRamadan();
   const ramadanDates = getCurrentRamadanDates();
-  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
-  const [permissions, setPermissions] = useState<PermissionStatus>({
-    location: false,
-    notifications: false,
-  });
-  const [presentToast] = useIonToast();
-
-  const setupNotificationsAndSchedule = useCallback(async () => {
-    try {
-      // Setup notifications (channel and actions)
-      const setupSuccess = await setupNotifications();
-      if (!setupSuccess) {
-        throw new Error("Failed to setup notifications");
-      }
-
-      // Schedule notifications for each day
-      const schedules: NotificationSchedule[] = data!.prayerTimes.map(
-        (day) => ({
-          sehriTime: day.sehri,
-          iftarTime: day.iftar,
-          dayNumber: day.dayNumber,
-        })
-      );
-
-      const scheduleSuccess = await scheduleRamadanNotifications(schedules);
-      if (!scheduleSuccess) {
-        throw new Error("Failed to schedule notifications");
-      }
-
-      // Add notification listeners
-      addNotificationListeners(
-        (notification) => {
-          // Handle received notification
-          presentToast({
-            message: notification.title + ": " + notification.body,
-            duration: 3000,
-            position: "top",
-          });
-        },
-        (actionPerformed) => {
-          // Handle notification action
-          if (actionPerformed.actionId === "view") {
-            // You can add navigation or other actions here
-            console.log(
-              "View action clicked for notification:",
-              actionPerformed
-            );
-          }
-        }
-      );
-    } catch (error) {
-      console.error("Error setting up notifications:", error);
-      presentToast({
-        message: "Failed to setup notifications. Please try again.",
-        duration: 3000,
-        position: "top",
-        color: "danger",
-      });
-    }
-  }, [data, presentToast]);
-
-  useEffect(() => {
-    checkInitialPermissions();
-    return () => {
-      // Cleanup notification listeners
-      removeNotificationListeners();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (permissions.notifications && data?.prayerTimes) {
-      setupNotificationsAndSchedule();
-    }
-  }, [permissions.notifications, data, setupNotificationsAndSchedule]);
-
-  const checkInitialPermissions = async () => {
-    const currentPermissions = await checkPermissions();
-    setPermissions(currentPermissions);
-
-    // Show modal if any permission is missing
-    if (!currentPermissions.location || !currentPermissions.notifications) {
-      setShowPermissionsModal(true);
-    }
-  };
-
-  const handleRequestPermissions = async () => {
-    const newPermissions = await requestPermissions();
-    setPermissions(newPermissions);
-    console.log(newPermissions.location);
-
-    // Close modal if all permissions are granted
-    if (newPermissions.location && newPermissions.notifications) {
-      setShowPermissionsModal(false);
-      // Refresh data to get accurate prayer times with new location
-      refresh();
-    }
-  };
 
   const handleRefresh = async (event: CustomEvent<RefresherEventDetail>) => {
     await refresh();
@@ -185,22 +73,13 @@ const Home: React.FC = () => {
             <IonCard>
               <IonCardContent>
                 <div className="error-message">
-                  <IonIcon 
-                    icon={informationCircleOutline} 
-                    color="warning" 
+                  <IonIcon
+                    icon={informationCircleOutline}
+                    color="warning"
                     size="large"
                     className="error-icon"
                   />
                   <p>{error || "Unable to load prayer times"}</p>
-                  {error?.includes('location') ? (
-                    <IonButton expand="block" onClick={handleRequestPermissions}>
-                      Enable Location
-                    </IonButton>
-                  ) : (
-                    <IonButton expand="block" onClick={() => refresh()}>
-                      Try Again
-                    </IonButton>
-                  )}
                 </div>
               </IonCardContent>
             </IonCard>
@@ -360,13 +239,6 @@ const Home: React.FC = () => {
             </IonCardContent>
           </IonCard>
         </div>
-
-        <PermissionsModal
-          isOpen={showPermissionsModal}
-          permissions={permissions}
-          onRequestPermissions={handleRequestPermissions}
-          onClose={() => setShowPermissionsModal(false)}
-        />
       </IonContent>
     </IonPage>
   );
