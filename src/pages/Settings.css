@@ -17,6 +17,22 @@ ion-icon {
   margin-right: 0.5rem;
 }
 
+/* Fix for button icons */
+ion-button ion-icon {
+  color: inherit;
+}
+
+/* Fix for icons in buttons with color attributes */
+ion-button[color] ion-icon {
+  color: currentColor;
+}
+
+/* Fix for icons in items with different colors */
+ion-item ion-icon[slot="start"],
+ion-item ion-icon[slot="end"] {
+  color: currentColor;
+}
+
 .test-section {
   margin-top: 2rem;
   padding: 1rem;

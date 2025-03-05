@@ -44,6 +44,7 @@ ion-tab-button ion-icon {
   font-size: 24px;
   margin: 0 auto var(--spacing-xs);
   display: block;
+  color: inherit;
 }
 
 ion-tab-button ion-label {
@@ -70,5 +71,14 @@ ion-tab-button ion-label {
 @media (prefers-color-scheme: dark) {
   ion-tab-bar {
     box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);
+  }
+  
+  ion-tab-button.tab-selected {
+    --color-selected: var(--ion-color-primary);
+  }
+  
+  ion-tab-button.tab-selected ion-icon,
+  ion-tab-button.tab-selected ion-label {
+    color: var(--ion-color-primary);
   }
 } 

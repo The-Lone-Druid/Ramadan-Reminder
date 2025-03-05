@@ -1,55 +1,57 @@
+import { LocalNotifications } from "@capacitor/local-notifications";
 import {
-  IonContent,
-  IonHeader,
-  IonPage,
-  IonTitle,
-  IonToolbar,
-  IonItem,
-  IonLabel,
-  IonToggle,
-  IonInput,
   IonButton,
-  IonIcon,
-  useIonToast,
-  IonRange,
-  IonSelect,
-  IonSelectOption,
   IonCard,
   IonCardContent,
   IonCardHeader,
   IonCardTitle,
+  IonContent,
+  IonHeader,
+  IonIcon,
+  IonInput,
+  IonItem,
+  IonLabel,
+  IonLoading,
+  IonPage,
+  IonRange,
+  IonSelect,
+  IonSelectOption,
+  IonTitle,
+  IonToggle,
+  IonToolbar,
+  useIonToast,
 } from "@ionic/react";
 import {
+  informationCircleOutline,
   locationOutline,
   notificationsOutline,
   playCircleOutline,
-  informationCircleOutline,
+  volumeHighOutline,
 } from "ionicons/icons";
 import { useEffect, useState } from "react";
+import { TTSSettings } from "../types/ramadan";
 import {
-  saveCoordinates,
-  getCoordinates,
-  saveNotificationSettings,
-  getNotificationSettings,
-  getTTSSettings,
-  saveTTSSettings,
-  getDateAdjustment,
-  saveDateAdjustment,
-} from "../utils/storage";
+  getCurrentLocation as getDeviceLocation,
+  requestLocationPermission,
+} from "../utils/location";
 import {
-  setupNotifications,
-  scheduleRamadanNotifications,
   NotificationSchedule,
+  scheduleRamadanNotifications,
+  setupNotifications,
   showFullTestNotifications,
 } from "../utils/notifications";
-import { LocalNotifications } from "@capacitor/local-notifications";
 import { calculatePrayerTimes } from "../utils/prayerTimes";
-import { TTSSettings } from "../types/ramadan";
 import { reminderService } from "../utils/reminderService";
 import {
-  requestLocationPermission,
-  getCurrentLocation as getDeviceLocation,
-} from "../utils/location";
+  getCoordinates,
+  getDateAdjustment,
+  getNotificationSettings,
+  getTTSSettings,
+  saveCoordinates,
+  saveDateAdjustment,
+  saveNotificationSettings,
+  saveTTSSettings,
+} from "../utils/storage";
 import "./Settings.css";
 
 const Settings: React.FC = () => {
@@ -60,6 +62,8 @@ const Settings: React.FC = () => {
   const [ttsSettings, setTTSSettings] = useState<TTSSettings>(getTTSSettings());
   const [dateAdjustment, setDateAdjustment] = useState(getDateAdjustment());
   const [presentToast] = useIonToast();
+  const [isTestingVoice, setIsTestingVoice] = useState(false);
+  const [isTestingNotifications, setIsTestingNotifications] = useState(false);
 
   useEffect(() => {
     const initializeSettings = async () => {
@@ -275,12 +279,52 @@ const Settings: React.FC = () => {
     saveTTSSettings(newSettings);
   };
 
-  const testVoiceReminders = () => {
-    reminderService.testReminders();
+  const testVoiceReminders = async () => {
+    try {
+      setIsTestingVoice(true);
+      
+      // Check if TTS is enabled
+      if (!ttsSettings.enabled) {
+        presentToast({
+          message: "Voice reminders are disabled. Please enable them first.",
+          duration: 3000,
+          color: "warning",
+        });
+        return;
+      }
+      
+      // Test the voice reminder
+      const testMessage = "This is a test voice reminder for Ramadan. If you can hear this message, voice reminders are working correctly.";
+      const success = await reminderService.testVoiceReminder(testMessage);
+      
+      if (success) {
+        presentToast({
+          message: "Voice reminder test successful!",
+          duration: 3000,
+          color: "success",
+        });
+      } else {
+        presentToast({
+          message: "Voice reminder test failed. Please check your device settings.",
+          duration: 3000,
+          color: "danger",
+        });
+      }
+    } catch (error) {
+      console.error("Error testing voice reminders:", error);
+      presentToast({
+        message: "An error occurred while testing voice reminders.",
+        duration: 3000,
+        color: "danger",
+      });
+    } finally {
+      setIsTestingVoice(false);
+    }
   };
 
   const handleTestNotifications = async () => {
     try {
+      setIsTestingNotifications(true);
       await showFullTestNotifications();
       // Show success message to user
       presentToast({
@@ -289,13 +333,27 @@ const Settings: React.FC = () => {
         color: "success",
       });
     } catch (error) {
-      console.log(error);
+      console.error("Error testing notifications:", error);
+      
+      // Provide a more specific error message based on the error
+      let errorMessage = "Failed to send test notifications. Please check permissions.";
+      
+      if (error instanceof Error) {
+        if (error.message.includes("permission")) {
+          errorMessage = "Notification permission is required. Please enable it in your device settings.";
+        } else if (error.message.includes("identifier")) {
+          errorMessage = "There was an issue with notification IDs. Please try again.";
+        }
+      }
+      
       // Show error message to user
       presentToast({
-        message: "Failed to send test notifications. Please check permissions.",
+        message: errorMessage,
         duration: 3000,
         color: "danger",
       });
+    } finally {
+      setIsTestingNotifications(false);
     }
   };
 
@@ -399,7 +457,7 @@ const Settings: React.FC = () => {
           <IonCard>
             <IonCardHeader>
               <IonCardTitle>
-                <IonIcon icon={playCircleOutline} /> Voice Settings
+                <IonIcon icon={volumeHighOutline} /> Voice Settings
               </IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
@@ -425,6 +483,8 @@ const Settings: React.FC = () => {
                     Indian English
                   </IonSelectOption>
                   <IonSelectOption value="en-US">US English</IonSelectOption>
+                  <IonSelectOption value="en-GB">British English</IonSelectOption>
+                  <IonSelectOption value="ar-SA">Arabic</IonSelectOption>
                 </IonSelect>
               </IonItem>
 
@@ -451,7 +511,7 @@ const Settings: React.FC = () => {
               </IonItem>
 
               <IonItem>
-                <IonLabel>Speech Pitch</IonLabel>
+                <IonLabel>Voice Pitch</IonLabel>
                 <IonRange
                   value={ttsSettings.pitch}
                   min={0.5}
@@ -460,6 +520,20 @@ const Settings: React.FC = () => {
                   onIonChange={(e) => handleTTSChange("pitch", e.detail.value)}
                 />
               </IonItem>
+              
+              <IonButton
+                expand="block"
+                onClick={testVoiceReminders}
+                disabled={!ttsSettings.enabled || isTestingVoice}
+                className="ion-margin-vertical"
+              >
+                <IonIcon icon={volumeHighOutline} slot="start" />
+                Test Voice Reminder
+              </IonButton>
+              
+              <p className="settings-description">
+                Voice reminders will be spoken aloud at Sehri and Iftar times. Make sure your device volume is turned up.
+              </p>
             </IonCardContent>
           </IonCard>
 
@@ -507,15 +581,17 @@ const Settings: React.FC = () => {
               <IonButton
                 expand="block"
                 onClick={testVoiceReminders}
+                disabled={isTestingVoice}
                 className="ion-margin-vertical"
               >
-                <IonIcon icon={playCircleOutline} slot="start" />
+                <IonIcon icon={volumeHighOutline} slot="start" />
                 Test Voice Reminders
               </IonButton>
 
               <IonButton
                 expand="block"
                 onClick={handleTestNotifications}
+                disabled={isTestingNotifications}
                 className="ion-margin-vertical"
               >
                 <IonIcon icon={notificationsOutline} slot="start" />
@@ -525,6 +601,14 @@ const Settings: React.FC = () => {
           </IonCard>
         </div>
       </IonContent>
+      <IonLoading
+        isOpen={isTestingVoice}
+        message="Testing voice reminder..."
+      />
+      <IonLoading
+        isOpen={isTestingNotifications}
+        message="Sending test notifications..."
+      />
     </IonPage>
   );
 };

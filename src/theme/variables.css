@@ -113,3 +113,19 @@ http://ionicframework.com/docs/theming/ */
     --ion-color-light-rgb: 34, 36, 40;
   }
 }
+
+/* Global Button Icon Fix */
+ion-button ion-icon {
+  color: inherit;
+}
+
+/* Fix for icons in buttons with color attributes */
+ion-button[color] ion-icon {
+  color: currentColor;
+}
+
+/* Fix for icons in items with different colors */
+ion-item ion-icon[slot="start"],
+ion-item ion-icon[slot="end"] {
+  color: currentColor;
+}

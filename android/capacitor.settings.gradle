@@ -11,6 +11,9 @@ project(':capacitor-app').projectDir = new File('../node_modules/.pnpm/@capacito
 include ':capacitor-browser'
 project(':capacitor-browser').projectDir = new File('../node_modules/.pnpm/@capacitor+browser@7.0.0_@capacitor+core@7.0.1/node_modules/@capacitor/browser/android')
 
+include ':capacitor-device'
+project(':capacitor-device').projectDir = new File('../node_modules/.pnpm/@capacitor+device@7.0.0_@capacitor+core@7.0.1/node_modules/@capacitor/device/android')
+
 include ':capacitor-geolocation'
 project(':capacitor-geolocation').projectDir = new File('../node_modules/.pnpm/@capacitor+geolocation@7.1.1_@capacitor+core@7.0.1/node_modules/@capacitor/geolocation/android')
 
