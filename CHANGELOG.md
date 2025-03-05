@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.4](https://github.com/The-Lone-Druid/Ramadan-Reminder/compare/v0.1.3...v0.1.4) (2025-03-05)
+
+
+### Features
+
+* updated version ([115b41c](https://github.com/The-Lone-Druid/Ramadan-Reminder/commit/115b41cd6d293b1bf25d92785a3d2b2263c3d4c5))
+
+
+### Bug Fixes
+
+* bugfixes & improvements ([5ffcb70](https://github.com/The-Lone-Druid/Ramadan-Reminder/commit/5ffcb709ff9115878426b7c6684ac4416ab81bef))
+
 ### [0.1.3](https://github.com/The-Lone-Druid/Ramadan-Reminder/compare/v0.1.2...v0.1.3) (2025-03-04)
 
 
